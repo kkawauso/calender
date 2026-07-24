@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Poppins:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent: #ff8fb3;
+    --accent-deep: #f26a9c;
+    --bg: #fff6f9;
+    --panel: #fdf0f5;
+    --card: #ffffff;
+    --ink: #5c4653;
+    --ink-soft: #a8909d;
+    --line: #f4dbe6;
+    --font-family: 'M PLUS Rounded 1c', sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
+  body{ font-family: var(--font-family); background: var(--bg); color: var(--ink); }
+  #app{ height:100vh; display:flex; flex-direction:column; }
+
+  button, select{ font-family:inherit; }
+  .btn{ border:none; cursor:pointer; border-radius:12px; font-weight:700; transition: opacity .15s, transform .1s; }
+  .btn:active{ transform: scale(.97); }
+  .btn:disabled{ opacity:.6; cursor:default; }
+  .btn-primary{ background: var(--accent); color:#fff; padding:11px 20px; font-size:14px; }
+  .btn-primary:hover{ background: var(--accent-deep); }
+  .btn-outline{ background:var(--card); color: var(--ink); border:1.5px solid var(--line); padding:9px 16px; font-size:13px; }
+  .btn-outline:hover{ border-color: var(--accent); color: var(--accent-deep); }
+  .btn-outline.active{ border-color: var(--accent); color: var(--accent-deep); background: var(--panel); }
+  .btn-danger{ background:var(--card); color:#d1477a; border:1.5px solid #f6c9db; padding:9px 16px; font-size:13px; }
+  .btn-icon{ width:36px; height:36px; border-radius:10px; border:1.5px solid var(--line); background:var(--card);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; flex-shrink:0; }
+  .btn-icon:hover{ border-color: var(--accent); }
+  .btn-sm{ padding:6px 10px; font-size:12px; border-radius:8px; }
+  .btn-text-sm{ padding:6px 10px; font-size:12px; border-radius:8px; white-space:nowrap; }
+
+  .card{ background: var(--card); border-radius: 16px; border: 1px solid var(--line); }
+
+  input[type=text], input[type=password], input[type=date], input[type=time], textarea, select{
+    width:100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line);
+    font-family:inherit; font-size:14px; color:var(--ink); background:var(--card); outline:none;
+  }
+  textarea{ resize:vertical; min-height:60px; }
+  input:focus, textarea:focus, select:focus{ border-color: var(--accent); }
+  label.field-label{ display:block; font-size:11.5px; color:var(--ink-soft); font-weight:700; margin:10px 0 5px; }
+
+  .auth-wrap{ flex:1; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+  .auth-card{ width:340px; padding:32px 28px; }
+  .logo-row{ display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:2px; }
+  .logo-dot{ width:20px; height:20px; border-radius:6px; background: var(--accent); }
+  .logo-text{ font-weight:800; font-size:21px; color: var(--ink); }
+  .tagline{ font-size:12px; color: var(--ink-soft); text-align:center; margin-bottom:22px; }
+  .tabs{ display:flex; gap:6px; background:var(--panel); border-radius:10px; padding:3px; margin-bottom:20px; }
+  .tab-btn{ flex:1; border:none; background:transparent; padding:9px 0; border-radius:8px; font-weight:700; font-size:13px;
+    color: var(--ink-soft); cursor:pointer; }
+  .tab-btn.active{ background:var(--card); color: var(--accent-deep); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .remember-row{ display:flex; align-items:center; gap:8px; margin:14px 2px 2px; }
+  .check{ appearance:none; width:16px; height:16px; border-radius:5px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; position:relative; flex-shrink:0; }
+  .check:checked{ background: var(--accent); border-color: var(--accent); }
+  .check:checked::after{ content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:800; }
+  .remember-label{ font-size:12px; color: var(--ink-soft); cursor:pointer; }
+  .auth-err{ color:#d1477a; font-size:12.5px; margin-top:10px; }
+  .auth-submit{ width:100%; margin-top:20px; padding:12px 0; font-size:14px; }
+
+  .topbar{ flex-shrink:0; display:flex; align-items:center; gap:10px; padding:12px 18px; flex-wrap:wrap; background:var(--card); border-bottom: 1px solid var(--line); position:relative; z-index:20; }
+  .brand{ display:flex; align-items:center; gap:8px; margin-right:2px; }
+  .nav-arrows{ display:flex; gap:4px; }
+  .month-label{ font-size:15px; font-weight:700; min-width:130px; }
+  .search-box{ position:relative; display:flex; align-items:center; gap:6px; background:var(--panel); border-radius:10px; padding:8px 12px; }
+  .search-box input{ border:none; outline:none; background:transparent; font-family:inherit; font-size:13px; width:130px; color:var(--ink); padding:0; }
+  .search-dropdown{ position:absolute; top:calc(100% + 6px); left:0; width:260px; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.12); max-height:280px; overflow-y:auto; z-index:60; padding:6px; }
+  .search-item{ display:flex; align-items:center; gap:6px; padding:7px 8px; border-radius:8px; cursor:pointer; font-size:12.5px; }
+  .search-item:hover{ background:var(--panel); }
+  .search-item b{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .search-item span{ color:var(--ink-soft); font-size:10px; flex-shrink:0; }
+  .search-empty{ padding:10px; font-size:12px; color:var(--ink-soft); text-align:center; }
+  .view-toggle{ display:flex; background:var(--panel); border-radius:10px; padding:3px; }
+  .view-toggle button{ border:none; background:transparent; padding:8px 13px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; color: var(--ink-soft); }
+  .view-toggle button.active{ background:var(--card); color: var(--accent-deep); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .spacer{ flex:1; }
+
+  .body-flex{ flex:1; min-height:0; display:flex; }
+  .main-col{ flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; padding: 14px 18px 18px; }
+
+  .resize-handle{ width:7px; flex-shrink:0; cursor:ew-resize; background:transparent; touch-action:none; }
+  .resize-handle:hover, .resize-handle.active{ background:var(--line); }
+
+  /* HOME */
+  .home-scroll{ flex:1; min-height:0; overflow-y:auto; }
+  .home-hero{ background: var(--panel); border:1px solid var(--line); border-radius:22px;
+    padding:32px 20px; margin-bottom:16px; text-align:center; }
+  .home-hero-greeting{ font-size:clamp(14px,2.2vw,18px); color:var(--ink-soft); font-weight:700; margin-bottom:8px; }
+  .home-hero-time{ font-size:clamp(50px,10vw,110px); font-weight:800; color:var(--accent-deep); line-height:1; letter-spacing:1px; }
+  .home-hero-date{ font-size:clamp(15px,2.4vw,22px); color:var(--ink); margin-top:10px; font-weight:700; }
+  .home-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .home-card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; }
+  .home-card h3{ margin:0 0 12px; font-size:14px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+  .home-list-item{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px; background:var(--panel); margin-bottom:7px; font-size:13px; }
+  .home-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .priority-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .diary-scroll{ flex:1; min-height:0; overflow-y:auto; }
+  .diary-nav{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .diary-date-label{ font-size:16px; font-weight:800; color:var(--ink); flex:1; }
+  .diary-textarea{ width:100%; min-height:260px; padding:16px; border-radius:16px; border:1.5px solid var(--line);
+    background:var(--card); color:var(--ink); font-family:inherit; font-size:14.5px; line-height:1.7; resize:vertical; outline:none; }
+  .diary-textarea:focus{ border-color:var(--accent); }
+  .diary-status{ font-size:11.5px; color:var(--ink-soft); margin-top:6px; min-height:16px; }
+  .diary-entry-item{ padding:10px 12px; border-radius:10px; background:var(--panel); margin-bottom:7px; cursor:pointer; }
+  .diary-entry-date{ font-size:12px; font-weight:700; color:var(--ink); margin-bottom:3px; }
+  .diary-entry-snippet{ font-size:12.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .home-time{ color:var(--ink-soft); font-size:11.5px; flex-shrink:0; }
+  .quote-text{ font-size:clamp(16px,2.3vw,26px); line-height:1.5; font-style:italic; font-weight:700; color:var(--ink); }
+  .now-playing{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--ink); margin:10px 0 6px; }
+  .now-playing .pulse{ width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; animation: pulse 1.4s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+  .player-controls{ display:flex; gap:8px; justify-content:center; margin:10px 0; }
+  .playlist-list{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; margin-top:10px; }
+  .playlist-item{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:10px; background:var(--panel); cursor:pointer; font-size:12.5px; }
+  .playlist-item.playing{ border:1.5px solid var(--accent); background:var(--card); }
+  .playlist-play{ width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+  .playlist-item.playing .playlist-play{ background:var(--accent-deep); }
+  .playlist-label{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .playlist-thumb{ width:32px; height:32px; border-radius:6px; object-fit:cover; flex-shrink:0; }
+  .now-playing-thumb{ width:28px; height:28px; border-radius:6px; object-fit:cover; flex-shrink:0; }
+  .mood-picker{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
+  .mood-btn{ font-size:24px; background:var(--panel); border:2px solid transparent; border-radius:12px; width:44px; height:44px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .mood-btn.selected{ border-color:var(--accent); background:var(--card); }
+  .mood-history{ display:flex; justify-content:space-between; gap:4px; }
+  .mood-history-item{ display:flex; flex-direction:column; align-items:center; font-size:17px; flex:1; }
+  .mood-history-day{ font-size:10px; color:var(--ink-soft); margin-top:2px; }
+  .timer-display{ font-size:clamp(42px,8.2vw,88px); font-weight:800; text-align:center; margin:10px 0 6px; letter-spacing:1px; color:var(--accent-deep); line-height:1; }
+  .timer-mode{ text-align:center; font-weight:800; font-size:13px; letter-spacing:.5px; color:var(--ink-soft); text-transform:uppercase; margin-bottom:4px; }
+  .timer-durations{ display:flex; gap:16px; justify-content:center; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .timer-durations label{ font-size:12px; color:var(--ink-soft); font-weight:700; }
+  .timer-durations input{ width:60px; padding:6px 8px; text-align:center; display:inline-block; }
+  .timer-controls{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .timer-presets{ display:flex; gap:6px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
+  .music-row{ display:flex; gap:6px; }
+  .music-embed-wrap{ margin-top:10px; border-radius:12px; overflow:hidden; }
+  @media (max-width: 820px){ .home-grid{ grid-template-columns: 1fr; } }
+
+  .week-head{ display:grid; grid-template-columns: 50px repeat(7,1fr); position:sticky; top:0; z-index:8; background:var(--card); height:66px; box-sizing:border-box; }
+  .allday-row{ display:grid; grid-template-columns: 50px repeat(7,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:66px; z-index:7; }
+  .allday-cell{ padding:4px; border-left:1px solid var(--line); min-height:10px; }
+  .allday-chip{ font-size:11px; padding:3px 7px; border-radius:6px; margin-bottom:3px; cursor:pointer; font-weight:600; }
+  .week-daycell{ text-align:center; padding:6px 4px 10px; }
+  .week-dayname{ font-size:10.5px; color: var(--ink-soft); font-weight:700; letter-spacing:.4px; }
+  .day-num{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:9px;
+    margin-top:3px; font-size:15px; font-weight:700; color: var(--ink); }
+  .day-num.today{ background: var(--accent); color:#fff; }
+  .week-scroll{ flex:1; min-height:0; overflow-y:auto; border-radius:14px; background:var(--card); border:1px solid var(--line); }
+  .week-grid{ display:grid; grid-template-columns: 50px repeat(7,1fr); position:relative; }
+  .hour-label{ height:52px; text-align:right; padding-right:8px; font-size:10px; color:var(--ink-soft); transform:translateY(-7px); }
+  .day-col{ position:relative; border-left:1px solid var(--line); }
+  .hour-cell{ height:52px; border-top:1px solid var(--line); cursor:pointer; }
+  .now-line{ position:absolute; left:0; right:0; border-top:2px solid var(--accent-deep); z-index:3; }
+  .now-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent-deep); margin-top:-5px; }
+  .event-chip{ position:absolute; left:3px; right:3px; border-radius:8px; padding:5px 7px; font-size:11.5px;
+    overflow:hidden; cursor:pointer; z-index:2; color:var(--ink); }
+  .event-chip b{ display:block; font-size:12px; }
+  .repeat-badge{ font-size:9px; opacity:.75; }
+
+  .month-wrap{ flex:1; min-height:0; display:flex; flex-direction:column; background:var(--card); border-radius:14px; border:1px solid var(--line); overflow:hidden; }
+  .month-headrow{ flex-shrink:0; display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid var(--line); }
+  .month-headrow div{ text-align:center; padding:8px 0; font-size:10.5px; font-weight:700; color:var(--ink-soft); }
+  .month-rows{ flex:1; min-height:0; display:grid; grid-template-rows:repeat(6,1fr); overflow-y:auto; }
+  .month-row{ display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid var(--line); }
+  .month-cell{ border-left:1px solid var(--line); padding:6px; cursor:pointer; overflow:hidden; }
+  .month-cell.dim{ opacity:.35; }
+  .month-chip{ font-size:10.5px; padding:2px 6px; border-radius:6px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink); }
+
+  .todo-panel{ flex-shrink:0; min-height:0; width:270px; border-left:1px solid var(--line); padding:16px; display:flex; flex-direction:column; background:var(--card); }
+  .todo-title{ font-weight:800; font-size:14px; margin-bottom:10px; }
+  .todo-form{ display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap; }
+  .todo-form input{ flex:1; min-width:80px; }
+  .todo-list{ flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
+  .todo-item{ display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:10px; background:var(--panel); }
+  .todo-check{ width:18px; height:18px; border-radius:6px; border:1.5px solid var(--accent); cursor:pointer; flex-shrink:0; margin-top:1px;
+    display:flex; align-items:center; justify-content:center; background:var(--card); font-size:11px; color:#fff; }
+  .todo-check.done{ background: var(--accent); }
+  .todo-body{ flex:1; min-width:0; cursor:pointer; }
+  .todo-text{ font-size:13px; word-break:break-word; }
+  .todo-text.done{ text-decoration:line-through; color:var(--ink-soft); }
+  .todo-meta{ display:flex; align-items:center; gap:5px; margin-top:3px; flex-wrap:wrap; }
+  .todo-x{ background:none; border:none; color:#c9a2b3; cursor:pointer; font-size:13px; flex-shrink:0; }
+  .empty-note{ color:var(--ink-soft); font-size:12.5px; }
+  .cat-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .mini-badge{ font-size:9.5px; color:var(--ink-soft); background:var(--card); border-radius:5px; padding:1px 5px; }
+
+  .overlay{ position:fixed; inset:0; background:rgba(90,50,70,.25); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .modal{ width:380px; max-width:100%; padding:22px; max-height:88vh; overflow-y:auto; }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:15px; margin-bottom:14px; }
+  .swatch{ width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+  .swatch.selected{ border-color:var(--card); box-shadow:0 0 0 2px var(--accent); }
+  .modal-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+  .weekday-chips{ display:flex; gap:4px; margin-top:8px; flex-wrap:wrap; }
+  .wd-chip{ width:34px; height:30px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); cursor:pointer; font-size:11px; font-weight:700; color:var(--ink-soft); }
+  .wd-chip.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .cat-row{ display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:8px; background:var(--panel); margin-bottom:5px; }
+  .cat-row input[type=text]{ flex:1; padding:6px 8px; font-size:12.5px; }
+
+  .toast-stack{ position:fixed; bottom:18px; right:18px; display:flex; flex-direction:column; gap:8px; z-index:100; }
+  .toast{ background:var(--card); border:1.5px solid var(--accent); color:var(--ink); border-radius:12px; padding:10px 16px; font-size:13px;
+    box-shadow:0 8px 22px rgba(0,0,0,.15); max-width:260px; }
+
+  #debugBanner{ position:fixed; top:0; left:0; right:0; background:#fff3cd; color:#7a5a00; font-size:12px; padding:6px 12px; z-index:200; display:none; }
+
+  ::-webkit-scrollbar{ width:7px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+
+  @media (max-width: 760px){ .todo-panel{ display:none; } .resize-handle{ display:none; } .search-box{ display:none; } }
+</style>
+</head>
+<body>
+<div id="debugBanner"></div>
+<div id="app"></div>
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ================= helpers ================= */
+const pad = n => String(n).padStart(2,'0');
+const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const sameDay = (a,b) => dkey(a) === dkey(b);
+const addDays = (d,n) => { const r = new Date(d); r.setDate(r.getDate()+n); return r; };
+const startOfWeek = d => addDays(d, -d.getDay());
+const startOfMonthGrid = d => startOfWeek(new Date(d.getFullYear(), d.getMonth(), 1));
+const uid = () => Math.random().toString(36).slice(2,10);
+const esc = s => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const parseDateLocal = key => { const [y,m,d] = key.split('-').map(Number); return new Date(y,m-1,d); };
+const formatTime = sec => `${pad(Math.floor(sec/60))}:${pad(sec%60)}`;
+const dayOfYear = d => { const start = new Date(d.getFullYear(),0,0); return Math.floor((d-start)/86400000); };
+
+const ACCENTS = ['#ff8fb3','#f4a6d0','#b9a4e8','#8fd6c0','#ffcf7a','#f2917a','#8fb8e8'];
+const FONTS = [
+  { id:'mplus', name:'Rounded', css:"'M PLUS Rounded 1c', sans-serif" },
+  { id:'poppins', name:'Poppins', css:"'Poppins', sans-serif" },
+  { id:'nunito', name:'Nunito', css:"'Nunito', sans-serif" },
+  { id:'zenmaru', name:'Zen Maru', css:"'Zen Maru Gothic', sans-serif" },
+  { id:'shippori', name:'Mincho', css:"'Shippori Mincho', serif" },
+];
+function fontCss(id){ const f = FONTS.find(x=>x.id===id); return f ? f.css : FONTS[0].css; }
+function applyFont(id){ document.documentElement.style.setProperty('--font-family', fontCss(id)); }
+
+/* hex <-> hsl for whole-palette theming */
+function hexToHsl(hex){
+  let r=parseInt(hex.slice(1,3),16)/255, g=parseInt(hex.slice(3,5),16)/255, b=parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2;
+  if(max===min){ h=s=0; } else {
+    const d=max-min; s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){ case r: h=(g-b)/d+(g<b?6:0); break; case g: h=(b-r)/d+2; break; default: h=(r-g)/d+4; }
+    h/=6;
+  }
+  return {h:h*360, s:s*100, l:l*100};
+}
+function hslToHex(h,s,l){
+  h/=360; s/=100; l/=100;
+  let r,g,b;
+  if(s===0){ r=g=b=l; } else {
+    const hue2rgb=(p,q,tt)=>{ let t=tt; if(t<0)t+=1; if(t>1)t-=1; if(t<1/6)return p+(q-p)*6*t; if(t<1/2)return q; if(t<2/3)return p+(q-p)*(2/3-t)*6; return p; };
+    const q = l<0.5 ? l*(1+s) : l+s-l*s; const p = 2*l-q;
+    r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3);
+  }
+  const toHex = x => Math.round(x*255).toString(16).padStart(2,'0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+function applyTheme(hex, mode){
+  let hsl; try{ hsl = hexToHsl(hex); }catch(e){ hsl = {h:340,s:100,l:75}; }
+  const {h,s} = hsl;
+  const root = document.documentElement.style;
+  root.setProperty('--accent', hex);
+  root.setProperty('--accent-deep', hslToHex(h, Math.min(s,90), mode==='dark' ? 62 : 46));
+  if(mode === 'dark'){
+    root.setProperty('--bg', hslToHex(h, Math.min(s,35), 11));
+    root.setProperty('--panel', hslToHex(h, Math.min(s,32), 17));
+    root.setProperty('--line', hslToHex(h, Math.min(s,32), 25));
+    root.setProperty('--card', hslToHex(h, Math.min(s,28), 15));
+    root.setProperty('--ink', hslToHex(h, 20, 92));
+    root.setProperty('--ink-soft', hslToHex(h, 12, 68));
+  } else {
+    root.setProperty('--bg', hslToHex(h, Math.min(s,55), 96.5));
+    root.setProperty('--panel', hslToHex(h, Math.min(s,50), 93));
+    root.setProperty('--line', hslToHex(h, Math.min(s,55), 87));
+    root.setProperty('--card', hslToHex(h, Math.min(s,25), 99));
+    root.setProperty('--ink', '#5c4653');
+    root.setProperty('--ink-soft', '#a8909d');
+  }
+}
+
+const T = {
+  en: {
+    appName:'Calendar', tagline:'a simple, tidy schedule',
+    signIn:'Sign In', createAccount:'Create Account', username:'Username', password:'Password',
+    signInBtn:'Sign In', createBtn:'Create Account', remember:'Keep me signed in for 30 days',
+    authError:'Incorrect username or password.', authExists:'That username is already taken.', authMissing:'Enter a username and password.',
+    checking:'Checking…',
+    home:'Home', today:'Today', month:'Month', week:'Week', diary:'Diary', todos:'To-Do', settings:'Settings',
+    language:'Language', accentColor:'Accent Color', account:'Account', signOut:'Sign Out', displayName:'Display name',
+    googleSync:'Google Calendar', googleSyncBody:"Connecting a real Google account needs an OAuth server and API keys that this sandboxed preview doesn't have. Everything here saves to your account in this app instead.",
+    close:'Close', newEvent:'New Event', editEvent:'Edit Event', title:'Title', date:'Date', startTime:'Start', endTime:'End',
+    location:'Location', color:'Color (if no category)', save:'Save', cancel:'Cancel', delete:'Delete',
+    addTodo:'Add a task…', noTodos:'Nothing here yet.', moreDetails:'Add with details',
+    searchPlaceholder:'Search', searchNoResults:'No matches.',
+    months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+    todayEvents:"Today's Events", todayTodos:"Today's To-Dos", noEventsToday:'No events today.', noTodosToday:'Nothing due today.',
+    focusTimer:'Focus Timer', start:'Start', pause:'Pause', reset:'Reset', min:'min',
+    workLabel:'Work', breakLabel:'Break', workMinutesLabel:'Work (min)', breakMinutesLabel:'Break (min)',
+    timerSound:'Timer Sound', soundChime:'Chime', soundBeep:'Beep', soundBell:'Bell', soundNone:'Silent', stopAlarm:'Stop',
+    music:'Music', musicPlaceholder:'Paste a Spotify or YouTube link…', loadMusic:'Save',
+    musicHelp:'Works with Spotify and YouTube links.', musicError:"Couldn't recognize that link — try a Spotify or YouTube URL.",
+    nowPlaying:'Now Playing', shuffle:'Shuffle', prevTrack:'Prev', nextTrack:'Next', playlistEmpty:'Save a link above to start your playlist.',
+    musicTitlePlaceholder:'Title (optional)',
+    category:'Category', newCategory:'+ New category', categoryName:'Category name', noCategory:'No category', addCategory:'Add',
+    repeat:'Repeat', repeatNone:'Does not repeat', repeatDaily:'Daily', repeatWeekly:'Weekly', repeatMonthly:'Monthly', repeatYearly:'Yearly',
+    monthlyWeekdayHint:'Repeats on this same week of the month (e.g. the 2nd Mon & Wed) every month.',
+    repeatUntil:'Repeat until (optional)',
+    priority:'Priority', priorityNone:'None', priorityLow:'Low', priorityMedium:'Medium', priorityHigh:'High',
+    duration:'How long (minutes, optional)', durationBadge:'min',
+    defaultCatTest:'Test', defaultCatQuiz:'Quiz', defaultCatProject:'Project',
+    moodTracker:'Mood Tracker', comingUp:'Coming Up', noComingUp:'Nothing coming up in the next 30 days.',
+    dueToday:'Today', dueTomorrow:'Tomorrow', daysLeft:'days left', reminders:'Reminders',
+    diaryPlaceholder:"Write about your day…", diarySaving:'Saving…', diarySaved:'Saved', diaryEmpty:'No entry yet — write one above!',
+    diaryPastEntries:'Past Entries', diaryNoEntries:'Nothing written yet.', diaryWordCount:'words',
+    customMoodPlaceholder:'Or type any emoji…', set:'Set',
+    description:'Description (optional)', dueDate:'Due date (optional)',
+    notifications:'Notifications', enableNotifications:'Enable browser notifications', notifOn:'Notifications are on',
+    notifBlocked:'Notifications are blocked in your browser', notifUnsupported:'Notifications aren\'t supported here',
+    manageCategories:'Manage categories', eventCategories:'Event categories', todoCategories:'To-Do categories', noCats:'None yet.',
+    todosDueTodayToast:'You have to-dos due today.', upcomingIn:'starts in',
+    quotes:'Daily Quotes', addQuote:'Add', quotePlaceholder:'Add a quote…', noQuotes:'Add a few quotes below — one will show here each day.', quoteOfDay:'Quote of the Day',
+    gMorning:'Good morning', gAfternoon:'Good afternoon', gEvening:'Good evening',
+    backupTitle:'Backup & Transfer', backupBody:'Move your account to another device or browser: copy this code here, then paste it into "Restore from backup code" on the other device. The code updates each time you open this screen so it always reflects your latest data — copy a fresh one right before you transfer.',
+    exportBtn:'Copy my backup code', exportCopied:'Copied!', restoreLink:'Restore from a backup code', restoreBtn:'Restore', restorePlaceholder:'Paste your backup code here…',
+    restoreError:'That code looks invalid.', restoreBack:'Back to sign in',
+    welcomeBackupTitle:'Save this now', welcomeBackupBody:"Your account is created! There's no real server behind this app, so this code is the only way to get back in from a different tab or browser. Copy it and save it somewhere safe right now — you can always get a fresh one later from Settings.",
+    gotIt:'Copied it, got it',
+    clockSeconds:'Show seconds in clock', font:'Font', themeMode:'Appearance', lightMode:'Light', darkMode:'Dark',
+  },
+  ja: {
+    appName:'カレンダー', tagline:'シンプルで見やすいスケジュール',
+    signIn:'ログイン', createAccount:'アカウント作成', username:'ユーザー名', password:'パスワード',
+    signInBtn:'ログイン', createBtn:'アカウント作成', remember:'30日間ログインを保持する',
+    authError:'ユーザー名またはパスワードが違います。', authExists:'そのユーザー名は既に使われています。', authMissing:'ユーザー名とパスワードを入力してください。',
+    checking:'確認中…',
+    home:'ホーム', today:'今日', month:'月', week:'週', diary:'日記', todos:'やること', settings:'設定',
+    language:'言語', accentColor:'アクセントカラー', account:'アカウント', signOut:'ログアウト', displayName:'表示名',
+    googleSync:'Googleカレンダー', googleSyncBody:'実際のGoogleアカウントと連携するにはOAuthサーバーとAPIキーが必要ですが、このサンドボックス環境では利用できません。代わりにこのアプリのアカウントに保存されます。',
+    close:'閉じる', newEvent:'新しい予定', editEvent:'予定を編集', title:'タイトル', date:'日付', startTime:'開始', endTime:'終了',
+    location:'場所', color:'色（カテゴリーがない場合）', save:'保存', cancel:'キャンセル', delete:'削除',
+    addTodo:'タスクを追加…', noTodos:'まだ何もありません。', moreDetails:'詳細を追加',
+    searchPlaceholder:'検索', searchNoResults:'一致するものがありません。',
+    months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+    todayEvents:'今日の予定', todayTodos:'今日のやること', noEventsToday:'今日の予定はありません。', noTodosToday:'今日の締め切りはありません。',
+    focusTimer:'集中タイマー', start:'開始', pause:'一時停止', reset:'リセット', min:'分',
+    workLabel:'作業', breakLabel:'休憩', workMinutesLabel:'作業（分）', breakMinutesLabel:'休憩（分）',
+    timerSound:'タイマー音', soundChime:'チャイム', soundBeep:'ビープ', soundBell:'ベル', soundNone:'無音', stopAlarm:'停止',
+    music:'音楽', musicPlaceholder:'SpotifyまたはYouTubeのリンクを貼り付け…', loadMusic:'保存',
+    musicHelp:'SpotifyとYouTubeのリンクに対応しています。', musicError:'リンクを認識できませんでした。SpotifyかYouTubeのURLを試してください。',
+    nowPlaying:'再生中', shuffle:'シャッフル', prevTrack:'前へ', nextTrack:'次へ', playlistEmpty:'上にリンクを保存するとプレイリストが始まります。',
+    musicTitlePlaceholder:'タイトル（任意）',
+    category:'カテゴリー', newCategory:'+ 新しいカテゴリー', categoryName:'カテゴリー名', noCategory:'カテゴリーなし', addCategory:'追加',
+    repeat:'繰り返し', repeatNone:'繰り返さない', repeatDaily:'毎日', repeatWeekly:'毎週', repeatMonthly:'毎月', repeatYearly:'毎年',
+    monthlyWeekdayHint:'毎月、この同じ週（例：第2月曜と水曜）に繰り返します。',
+    repeatUntil:'繰り返しの終了日（任意）',
+    priority:'優先度', priorityNone:'なし', priorityLow:'低', priorityMedium:'中', priorityHigh:'高',
+    duration:'所要時間（分・任意）', durationBadge:'分',
+    defaultCatTest:'テスト', defaultCatQuiz:'小テスト', defaultCatProject:'プロジェクト',
+    moodTracker:'気分トラッカー', comingUp:'今後の予定', noComingUp:'今後30日間の予定はありません。',
+    dueToday:'今日', dueTomorrow:'明日', daysLeft:'日後', reminders:'リマインダー',
+    diaryPlaceholder:'今日はどんな一日でしたか…', diarySaving:'保存中…', diarySaved:'保存しました', diaryEmpty:'まだ日記がありません。上に書いてみましょう！',
+    diaryPastEntries:'過去の日記', diaryNoEntries:'まだ何も書かれていません。', diaryWordCount:'文字',
+    customMoodPlaceholder:'好きな絵文字を入力…', set:'設定',
+    description:'詳細（任意）', dueDate:'期限（任意）',
+    notifications:'通知', enableNotifications:'ブラウザ通知を有効にする', notifOn:'通知はオンです',
+    notifBlocked:'ブラウザで通知がブロックされています', notifUnsupported:'この環境では通知に対応していません',
+    manageCategories:'カテゴリー管理', eventCategories:'予定のカテゴリー', todoCategories:'やることのカテゴリー', noCats:'まだありません。',
+    todosDueTodayToast:'今日締め切りのやることがあります。', upcomingIn:'まであと',
+    quotes:'今日の名言', addQuote:'追加', quotePlaceholder:'名言を追加…', noQuotes:'名言を追加すると、ここに毎日ひとつ表示されます。', quoteOfDay:'今日の名言',
+    gMorning:'おはよう', gAfternoon:'こんにちは', gEvening:'こんばんは',
+    backupTitle:'バックアップと移行', backupBody:'このコードをコピーして、別の端末やブラウザの「バックアップコードから復元」に貼り付けると、アカウントを移行できます。この画面を開くたびに最新のデータでコードが更新されるので、移行する直前に新しいコードをコピーしてください。',
+    exportBtn:'バックアップコードをコピー', exportCopied:'コピーしました！', restoreLink:'バックアップコードから復元', restoreBtn:'復元する', restorePlaceholder:'バックアップコードを貼り付け…',
+    restoreError:'そのコードは無効なようです。', restoreBack:'ログインに戻る',
+    welcomeBackupTitle:'今すぐ保存してください', welcomeBackupBody:'アカウントを作成しました！このアプリには実際のサーバーがないため、別のタブやブラウザからログインするにはこのコードが唯一の方法です。今すぐコピーして安全な場所に保存してください。後で設定から新しいコードを取得することもできます。',
+    gotIt:'コピーしました',
+    clockSeconds:'時計に秒を表示する', font:'フォント', themeMode:'外観', lightMode:'ライト', darkMode:'ダーク',
+  }
+};
+T.en.sun='Sun';T.en.mon='Mon';T.en.tue='Tue';T.en.wed='Wed';T.en.thu='Thu';T.en.fri='Fri';T.en.sat='Sat';
+T.ja.sun='日';T.ja.mon='月';T.ja.tue='火';T.ja.wed='水';T.ja.thu='木';T.ja.fri='金';T.ja.sat='土';
+function wdShort(lang,i){ const L=T[lang]||T.en; return [L.sun,L.mon,L.tue,L.wed,L.thu,L.fri,L.sat][i]; }
+
+/* ================= in-memory cache (fast path; storage is the real source of truth) ================= */
+const mem = {
+  creds: new Map(), settings: new Map(), events: new Map(), todos: new Map(), categories: new Map(), moods: new Map(), diary: new Map(),
+  session: null,
+};
+
+/* ================= storage sync (timeout-guarded so it can never hang forever) ================= */
+function withTimeout(promise, ms){
+  return new Promise((resolve) => {
+    let done = false;
+    const timer = setTimeout(() => { if(!done){ done = true; resolve(null); } }, ms);
+    Promise.resolve(promise).then(v => { if(!done){ done=true; clearTimeout(timer); resolve(v); } })
+      .catch(() => { if(!done){ done=true; clearTimeout(timer); resolve(null); } });
+  });
+}
+const LS_PREFIX = 'calenda_';
+function lsGet(key){
+  try{ const raw = localStorage.getItem(LS_PREFIX+key); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function lsSet(key,val){
+  try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(val)); return true; }catch(e){ return false; }
+}
+function lsDelete(key){
+  try{ localStorage.removeItem(LS_PREFIX+key); }catch(e){}
+}
+async function bgGet(key){
+  const local = lsGet(key);
+  if(local !== null) return local;
+  if(!window.storage || typeof window.storage.get !== 'function') return null;
+  try{ const r = await withTimeout(window.storage.get(key,false), 4000); return r ? JSON.parse(r.value) : null; }
+  catch(e){ return null; }
+}
+async function bgSet(key,val){
+  lsSet(key, val);
+  if(!window.storage || typeof window.storage.set !== 'function') return false;
+  try{ return !!(await withTimeout(window.storage.set(key, JSON.stringify(val), false), 4000)); }catch(e){ return false; }
+}
+async function bgDelete(key){
+  lsDelete(key);
+  if(!window.storage || typeof window.storage.delete !== 'function') return;
+  try{ await withTimeout(window.storage.delete(key,false), 4000); }catch(e){}
+}
+const scoped = (u,name) => `u_${u}_${name}`;
+
+/* ================= app state ================= */
+const S = {
+  session: null, settings: {language:'en', accent: ACCENTS[0], musicLinks:[], nowPlayingId:null, displayName:'', quotes:[], clockSeconds:true, font:'mplus', timerSound:'chime', themeMode:'light'},
+  events: [], todos: [], categories: {event:[], todo:[]}, moods: {}, diaryEntries: {},
+  view:'home', cursor: new Date(),
+  editingEvent: null, editingTodo: null, eventViewMode:false, todoViewMode:false, showSettings:false, showGoogle:false, showTodos:true,
+  authMode:'signIn', authErr:'', authBusy:false, ready:false,
+  showRestore:false, restoreErr:'', exportCopiedFlash:false, showWelcomeBackup:false,
+  searchQuery:'', forceScrollToNow:true, savedScrollTop:null,
+  musicErr:'',
+  timer:{ mode:'work', workMinutes:25, breakMinutes:5, total:1500, remaining:1500, running:false },
+  alarmPlaying:false,
+  toasts:[], notifiedEventKeys:new Set(), notifiedTodoDay:null,
+  notifPermission: (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported',
+};
+
+function t(){ return T[S.settings.language] || T.en; }
+function accent(){ return S.settings.accent || ACCENTS[0]; }
+
+function blankEvent(date){
+  return { id:uid(), title:'', date:dkey(date), start:'10:00', end:'11:00', location:'', color:ACCENTS[0], categoryId:null, priority:'none', recurrence:{type:'none', weekdays:[]}, _new:true };
+}
+function blankTodo(){
+  return { id:uid(), text:'', description:'', done:false, categoryId:null, dueDate:'', startDate:dkey(new Date()), priority:'none', durationMinutes:null,
+    recurrence:{type:'none', weekdays:[]}, completions:{}, _new:true };
+}
+
+/* ================= data load / save (storage-first, so it works across devices) ================= */
+async function loadUserData(username){
+  const [settings, events, todos, categories, moods, diaryEntries] = await Promise.all([
+    bgGet(scoped(username,'settings')), bgGet(scoped(username,'events')), bgGet(scoped(username,'todos')), bgGet(scoped(username,'categories')), bgGet(scoped(username,'moods')), bgGet(scoped(username,'diary'))
+  ]);
+  S.settings = Object.assign({language:'en', accent: ACCENTS[0], musicLinks:[], nowPlayingId:null, displayName:'', quotes:[], clockSeconds:true, font:'mplus', timerSound:'chime', themeMode:'light'}, settings || mem.settings.get(username) || {});
+  S.events = events || mem.events.get(username) || [];
+  S.todos = todos || mem.todos.get(username) || [];
+  S.categories = categories || mem.categories.get(username) || {event:[], todo:[]};
+  if(!S.categories.event) S.categories.event = [];
+  if(!S.categories.todo) S.categories.todo = [];
+  if(S.categories.event.length === 0){
+    S.categories.event = [
+      { id:uid(), name: t().defaultCatTest, color:'#f2917a' },
+      { id:uid(), name: t().defaultCatQuiz, color:'#ffcf7a' },
+      { id:uid(), name: t().defaultCatProject, color:'#8fb8e8' },
+    ];
+    bgSet(scoped(username,'categories'), S.categories);
+  }
+  S.moods = moods || mem.moods.get(username) || {};
+  S.diaryEntries = diaryEntries || mem.diary.get(username) || {};
+  mem.settings.set(username, S.settings);
+  mem.events.set(username, S.events);
+  mem.todos.set(username, S.todos);
+  mem.categories.set(username, S.categories);
+  mem.moods.set(username, S.moods);
+  mem.diary.set(username, S.diaryEntries);
+}
+function persistSettings(){ mem.settings.set(S.session.username, S.settings); bgSet(scoped(S.session.username,'settings'), S.settings); }
+function persistEvents(){ mem.events.set(S.session.username, S.events); bgSet(scoped(S.session.username,'events'), S.events); }
+function persistTodos(){ mem.todos.set(S.session.username, S.todos); bgSet(scoped(S.session.username,'todos'), S.todos); }
+function persistCategories(){ mem.categories.set(S.session.username, S.categories); bgSet(scoped(S.session.username,'categories'), S.categories); }
+function persistMoods(){ mem.moods.set(S.session.username, S.moods); bgSet(scoped(S.session.username,'moods'), S.moods); }
+function persistDiary(){ mem.diary.set(S.session.username, S.diaryEntries); bgSet(scoped(S.session.username,'diary'), S.diaryEntries); }
+
+/* ================= boot: restore session if one exists in storage ================= */
+async function hydrateAll(){
+  const session = await bgGet('session');
+  if(session && session.expiresAt > Date.now()){
+    S.session = session; mem.session = session;
+    await loadUserData(session.username);
+    S.view = 'home';
+  }
+  S.ready = true;
+  render();
+}
+
+/* ================= recurrence expansion ================= */
+function expandEventsInRange(rangeStart, rangeEnd){
+  const out = [];
+  S.events.forEach(ev => {
+    const evDate = parseDateLocal(ev.date);
+    const rec = ev.recurrence || {type:'none'};
+    const untilDate = rec.until ? parseDateLocal(rec.until) : null;
+    const capEnd = untilDate && untilDate < rangeEnd ? untilDate : rangeEnd;
+    if(!rec.type || rec.type === 'none'){
+      if(evDate >= rangeStart && evDate <= rangeEnd) out.push({...ev, instanceDate: ev.date});
+      return;
+    }
+    if(untilDate && untilDate < rangeStart) return;
+    if(rec.type === 'weekly'){
+      const weekdays = (rec.weekdays && rec.weekdays.length) ? rec.weekdays : [evDate.getDay()];
+      let d = evDate > rangeStart ? new Date(evDate) : new Date(rangeStart);
+      for(; d <= capEnd; d = addDays(d,1)){
+        if(d < evDate) continue;
+        if(weekdays.includes(d.getDay())) out.push({...ev, instanceDate: dkey(d)});
+      }
+    } else if(rec.type === 'monthly'){
+      if(rec.weekdays && rec.weekdays.length){
+        const n = Math.ceil(evDate.getDate()/7);
+        let d = evDate > rangeStart ? new Date(evDate) : new Date(rangeStart);
+        for(; d <= capEnd; d = addDays(d,1)){
+          if(d < evDate) continue;
+          if(rec.weekdays.includes(d.getDay()) && Math.ceil(d.getDate()/7) === n) out.push({...ev, instanceDate: dkey(d)});
+        }
+      } else {
+        let cursor = new Date(evDate); let guard = 0;
+        while(cursor <= capEnd && guard < 600){
+          if(cursor >= rangeStart) out.push({...ev, instanceDate: dkey(cursor)});
+          cursor = new Date(cursor.getFullYear(), cursor.getMonth()+1, evDate.getDate());
+          guard++;
+        }
+      }
+    } else if(rec.type === 'yearly'){
+      let cursor = new Date(evDate); let guard = 0;
+      while(cursor <= capEnd && guard < 200){
+        if(cursor >= rangeStart) out.push({...ev, instanceDate: dkey(cursor)});
+        cursor = new Date(cursor.getFullYear()+1, cursor.getMonth(), evDate.getDate());
+        guard++;
+      }
+    }
+  });
+  return out;
+}
+function todoOccursOn(td, dateObj){
+  const rec = td.recurrence || {type:'none'};
+  if(rec.type && rec.type !== 'none'){
+    const start = parseDateLocal(td.startDate || dkey(new Date()));
+    if(dateObj < start) return false;
+    if(rec.until && dateObj > parseDateLocal(rec.until)) return false;
+    if(rec.type === 'daily') return true;
+    if(rec.type === 'weekly'){ const wds = (rec.weekdays&&rec.weekdays.length)?rec.weekdays:[start.getDay()]; return wds.includes(dateObj.getDay()); }
+    if(rec.type === 'monthly'){
+      if(rec.weekdays && rec.weekdays.length){
+        const n = Math.ceil(start.getDate()/7);
+        return rec.weekdays.includes(dateObj.getDay()) && Math.ceil(dateObj.getDate()/7) === n;
+      }
+      return dateObj.getDate() === start.getDate();
+    }
+    if(rec.type === 'yearly') return dateObj.getDate()===start.getDate() && dateObj.getMonth()===start.getMonth();
+  }
+  if(td.dueDate) return td.dueDate === dkey(dateObj);
+  return false;
+}
+function isTodoDoneOn(td, dateObj){
+  const rec = td.recurrence || {type:'none'};
+  if(rec.type && rec.type !== 'none'){ return !!(td.completions && td.completions[dkey(dateObj)]); }
+  return !!td.done;
+}
+function toggleTodoOn(td, dateObj){
+  const rec = td.recurrence || {type:'none'};
+  if(rec.type && rec.type !== 'none'){
+    td.completions = td.completions || {};
+    const k = dkey(dateObj);
+    td.completions[k] = !td.completions[k];
+  } else { td.done = !td.done; }
+  persistTodos();
+}
+function catFor(list, id){ return (list||[]).find(c => c.id === id) || null; }
+function todosOnDate(dateObj){ return S.todos.filter(td => todoOccursOn(td, dateObj)); }
+
+/* ================= timer sound (Web Audio API, no external files needed) ================= */
+let _audioCtx = null;
+function getAudioCtx(){
+  if(!_audioCtx){ try{ _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  return _audioCtx;
+}
+function playTone(freq, duration, type, delay, gainValue){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  try{
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = gainValue == null ? 0.16 : gainValue;
+    osc.connect(gain); gain.connect(ctx.destination);
+    const startTime = ctx.currentTime + (delay || 0);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }catch(e){}
+}
+function playTimerSound(id){
+  const ctx = getAudioCtx();
+  if(ctx && ctx.state === 'suspended'){ ctx.resume().catch(()=>{}); }
+  if(!id || id === 'none') return;
+  if(id === 'chime'){ playTone(880,0.3,'sine',0); playTone(1174.66,0.4,'sine',0.16); }
+  else if(id === 'beep'){ playTone(700,0.14,'square',0,0.1); playTone(700,0.14,'square',0.22,0.1); playTone(700,0.14,'square',0.44,0.1); }
+  else if(id === 'bell'){ playTone(523.25,0.5,'triangle',0,0.14); playTone(659.25,0.5,'triangle',0.1,0.14); playTone(783.99,0.7,'triangle',0.2,0.14); }
+}
+let _alarmHandle = null;
+function startAlarm(){
+  if(!S.settings.timerSound || S.settings.timerSound === 'none') return;
+  S.alarmPlaying = true;
+  playTimerSound(S.settings.timerSound);
+  if(_alarmHandle) clearInterval(_alarmHandle);
+  _alarmHandle = setInterval(() => { playTimerSound(S.settings.timerSound); }, 1800);
+}
+function stopAlarm(){
+  S.alarmPlaying = false;
+  if(_alarmHandle){ clearInterval(_alarmHandle); _alarmHandle = null; }
+  render();
+}
+function formatTimeDisplay(hhmm){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  let hour12 = h % 12; if(hour12 === 0) hour12 = 12;
+  if(S.settings.language === 'ja'){
+    const period = h < 12 ? '午前' : '午後';
+    return `${period}${hour12}:${pad(m)}`;
+  }
+  const period = h >= 12 ? 'PM' : 'AM';
+  return `${hour12}:${pad(m)} ${period}`;
+}
+function todaysQuote(){ const list = S.settings.quotes || []; if(!list.length) return null; return list[dayOfYear(new Date()) % list.length]; }
+
+/* ================= auth (storage-first so accounts work across devices; timeout-guarded so it can't hang) ================= */
+async function submitAuth(username, password, remember){
+  S.authErr = '';
+  const uname = (username || '').trim();
+  if(!uname || !password){ S.authErr = t().authMissing; render(); return; }
+
+  S.authBusy = true; render();
+  const credKey = `cred_${uname}`;
+  let existing = mem.creds.has(uname) ? {password: mem.creds.get(uname)} : await bgGet(credKey);
+
+  if(S.authMode === 'createAccount'){
+    if(existing){ S.authBusy=false; S.authErr = t().authExists; render(); return; }
+    mem.creds.set(uname, password);
+    await bgSet(credKey, {password});
+    await finishLogin(uname, remember);
+    S.showWelcomeBackup = true;
+  } else {
+    if(!existing || existing.password !== password){ S.authBusy=false; S.authErr = t().authError; render(); return; }
+    mem.creds.set(uname, existing.password);
+    await finishLogin(uname, remember);
+  }
+}
+async function finishLogin(username, remember){
+  const days = remember ? 30 : 1;
+  const session = { username, expiresAt: Date.now() + days*24*60*60*1000 };
+  mem.session = session; S.session = session;
+  bgSet('session', session);
+  await loadUserData(username);
+  S.authBusy = false;
+  S.view = 'home';
+  render();
+}
+function signOut(){
+  mem.session = null; S.session = null; S.showSettings = false;
+  bgDelete('session');
+  render();
+}
+
+/* ================= backup code (guaranteed manual transfer between devices) ================= */
+function exportBackupCode(){
+  const username = S.session.username;
+  const data = {
+    v:1, username,
+    password: mem.creds.get(username) || '',
+    settings: S.settings, events: S.events, todos: S.todos, categories: S.categories,
+  };
+  try{ return btoa(unescape(encodeURIComponent(JSON.stringify(data)))); }
+  catch(e){ return ''; }
+}
+function importBackupCode(code){
+  try{
+    const json = decodeURIComponent(escape(atob(code.trim())));
+    const data = JSON.parse(json);
+    if(!data || !data.username) throw new Error('invalid');
+    mem.creds.set(data.username, data.password || '');
+    mem.settings.set(data.username, data.settings || {});
+    mem.events.set(data.username, data.events || []);
+    mem.todos.set(data.username, data.todos || []);
+    mem.categories.set(data.username, data.categories || {event:[],todo:[]});
+    bgSet(`cred_${data.username}`, {password: data.password || ''});
+    bgSet(scoped(data.username,'settings'), data.settings || {});
+    bgSet(scoped(data.username,'events'), data.events || []);
+    bgSet(scoped(data.username,'todos'), data.todos || []);
+    bgSet(scoped(data.username,'categories'), data.categories || {event:[],todo:[]});
+    S.showRestore = false; S.restoreErr = '';
+    finishLogin(data.username, true);
+  }catch(e){
+    S.restoreErr = t().restoreError;
+    render();
+  }
+}
+
+/* ================= toasts & notifications ================= */
+function pushToast(text){
+  const id = uid();
+  S.toasts.push({id,text});
+  renderToasts();
+  setTimeout(() => { S.toasts = S.toasts.filter(x=>x.id!==id); renderToasts(); }, 6000);
+  if(S.notifPermission === 'granted'){ try{ new Notification(t().appName, {body:text}); }catch(e){} }
+}
+function renderToasts(){
+  const host = document.getElementById('toastStack');
+  if(!host) return;
+  host.innerHTML = S.toasts.map(x => `<div class="toast">${esc(x.text)}</div>`).join('');
+}
+function checkReminders(){
+  if(!S.session) return;
+  const now = new Date();
+  const todayInstances = expandEventsInRange(now, now);
+  todayInstances.forEach(ev => {
+    if(ev.instanceDate !== dkey(now)) return;
+    const [sh,sm] = ev.start.split(':').map(Number);
+    const diff = (sh*60+sm) - (now.getHours()*60+now.getMinutes());
+    const key = `${ev.id}_${ev.instanceDate}`;
+    if(diff >= 0 && diff <= 15 && !S.notifiedEventKeys.has(key)){
+      S.notifiedEventKeys.add(key);
+      pushToast(`${ev.title || t().newEvent} — ${t().upcomingIn} ${diff} min`);
+    }
+  });
+  const todayKey = dkey(now);
+  if(S.notifiedTodoDay !== todayKey){
+    const dueToday = S.todos.filter(td => todoOccursOn(td, now) && !isTodoDoneOn(td, now));
+    if(dueToday.length > 0) pushToast(`${dueToday.length} ${t().todosDueTodayToast}`);
+    S.notifiedTodoDay = todayKey;
+  }
+}
+setInterval(checkReminders, 60000);
+
+/* ================= focus timer (own interval; direct DOM update, no full re-render per tick) ================= */
+setInterval(() => {
+  if(S.timer.running && S.timer.remaining > 0){
+    S.timer.remaining--;
+    const disp = document.getElementById('timerDisplay');
+    if(disp) disp.textContent = formatTime(S.timer.remaining);
+    if(S.timer.remaining === 0){
+      const goingToBreak = S.timer.mode === 'work';
+      S.timer.mode = goingToBreak ? 'break' : 'work';
+      const mins = goingToBreak ? S.timer.breakMinutes : S.timer.workMinutes;
+      S.timer.total = mins * 60;
+      S.timer.remaining = mins * 60;
+      S.timer.running = true;
+      const ja = S.settings.language === 'ja';
+      pushToast(goingToBreak ? (ja ? '休憩の時間です！' : 'Break time!') : (ja ? '作業に戻りましょう！' : 'Back to work!'));
+      startAlarm();
+      render();
+    }
+  }
+}, 1000);
+
+/* ================= live clock (direct DOM update) ================= */
+setInterval(() => {
+  const el = document.getElementById('liveClock');
+  if(el){ const now = new Date(); el.textContent = now.toLocaleTimeString(S.settings.language==='ja'?'ja-JP':'en-US', {hour:'2-digit', minute:'2-digit', second: S.settings.clockSeconds?'2-digit':undefined}); }
+}, 1000);
+
+/* ================= resizable todo panel ================= */
+let resizingPanel = false;
+let _dayClickTimer = null;
+let _diarySaveTimer = null;
+document.addEventListener('pointermove', (e) => {
+  if(!resizingPanel) return;
+  const panel = document.querySelector('.todo-panel');
+  const flex = document.querySelector('.body-flex');
+  if(!panel || !flex) return;
+  const rect = flex.getBoundingClientRect();
+  const maxWidth = Math.min(900, rect.width * 0.75);
+  let newWidth = rect.right - e.clientX;
+  newWidth = Math.max(220, Math.min(maxWidth, newWidth));
+  panel.style.width = newWidth + 'px';
+});
+document.addEventListener('pointerup', () => {
+  if(resizingPanel){
+    resizingPanel = false;
+    document.body.style.userSelect = '';
+    const panel = document.querySelector('.todo-panel');
+    if(panel && S.session){ S.settings.todoPanelWidth = parseInt(panel.style.width,10) || 270; persistSettings(); }
+  }
+});
+
+/* ================= render root ================= */
+function render(){
+  const root = document.getElementById('app');
+  applyTheme(accent(), S.settings.themeMode);
+  applyFont(S.settings.font);
+  if(!S.ready){ root.innerHTML = ''; return; }
+  const scroller = document.getElementById('weekScroll');
+  if(scroller) S.savedScrollTop = scroller.scrollTop;
+  root.innerHTML = S.session ? renderMainApp() : renderAuth();
+  wireEvents();
+  renderToasts();
+}
+
+/* ================= AUTH SCREEN ================= */
+function renderAuth(){
+  const L = t();
+  return `
+  <div class="auth-wrap">
+    <div class="card auth-card">
+      <div class="logo-row"><span class="logo-dot"></span><span class="logo-text">${esc(L.appName)}</span></div>
+      <div class="tagline">${esc(L.tagline)}</div>
+      <div class="tabs">
+        <button type="button" class="tab-btn ${S.authMode==='signIn'?'active':''}" id="tabSignIn">${esc(L.signIn)}</button>
+        <button type="button" class="tab-btn ${S.authMode==='createAccount'?'active':''}" id="tabCreate">${esc(L.createAccount)}</button>
+      </div>
+      <div id="authForm">
+        <label class="field-label">${esc(L.username)}</label>
+        <input type="text" id="authUser" autocomplete="username" />
+        <label class="field-label">${esc(L.password)}</label>
+        <input type="password" id="authPass" autocomplete="off" />
+        <div class="remember-row">
+          <input type="checkbox" class="check" id="authRemember" checked />
+          <label class="remember-label" for="authRemember">${esc(L.remember)}</label>
+        </div>
+        ${S.authErr ? `<div class="auth-err">${esc(S.authErr)}</div>` : ''}
+        <button type="button" class="btn btn-primary auth-submit" id="authSubmitBtn" ${S.authBusy?'disabled':''}>${S.authBusy?esc(L.checking):(S.authMode==='signIn'?esc(L.signInBtn):esc(L.createBtn))}</button>
+      </div>
+      ${!S.showRestore ? `
+      <button type="button" id="showRestoreBtn" style="width:100%; margin-top:14px; background:none; border:none; color:var(--ink-soft); font-size:12px; text-decoration:underline; cursor:pointer;">${esc(L.restoreLink)}</button>
+      ` : `
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
+        <label class="field-label">${esc(L.restoreLink)}</label>
+        <textarea id="restoreInput" rows="3" placeholder="${esc(L.restorePlaceholder)}"></textarea>
+        ${S.restoreErr ? `<div class="auth-err">${esc(S.restoreErr)}</div>` : ''}
+        <button type="button" class="btn btn-primary" style="width:100%; margin-top:10px;" id="restoreBtn">${esc(L.restoreBtn)}</button>
+        <button type="button" id="hideRestoreBtn" style="width:100%; margin-top:8px; background:none; border:none; color:var(--ink-soft); font-size:12px; text-decoration:underline; cursor:pointer;">${esc(L.restoreBack)}</button>
+      </div>
+      `}
+    </div>
+  </div>`;
+}
+
+/* ================= MAIN APP ================= */
+function renderMainApp(){
+  const L = t();
+  const label = `${L.months[S.cursor.getMonth()]} ${S.cursor.getFullYear()}`;
+  const todoWidth = S.settings.todoPanelWidth || 270;
+  return `
+    <div class="topbar">
+      <div class="brand"><span class="logo-dot"></span><span class="logo-text" style="font-size:17px;">${esc(L.appName)}</span></div>
+      <button type="button" class="btn btn-outline" id="btnToday">${esc(L.today)}</button>
+      <div class="nav-arrows">
+        <button type="button" class="btn-icon" id="btnPrev">‹</button>
+        <button type="button" class="btn-icon" id="btnNext">›</button>
+      </div>
+      <div class="month-label">${esc(label)}</div>
+      <div class="search-box">
+        <input id="searchInput" placeholder="${esc(L.searchPlaceholder)}" autocomplete="off" value="${esc(S.searchQuery)}" />
+        <div class="search-dropdown" id="searchResults" style="display:none;"></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="view-toggle">
+        <button type="button" class="${S.view==='home'?'active':''}" id="btnHome">${esc(L.home)}</button>
+        <button type="button" class="${S.view==='week'?'active':''}" id="btnWeek">${esc(L.week)}</button>
+        <button type="button" class="${S.view==='month'?'active':''}" id="btnMonth">${esc(L.month)}</button>
+        <button type="button" class="${S.view==='diary'?'active':''}" id="btnDiary">${esc(L.diary)}</button>
+      </div>
+      <button type="button" class="btn-icon" id="btnToggleTodos" title="${esc(L.todos)}">☑</button>
+      <button type="button" class="btn btn-primary" id="btnNewEvent">+ ${esc(L.newEvent)}</button>
+      <button type="button" class="btn-icon" id="btnSettings" title="${esc(L.settings)}">⚙</button>
+    </div>
+    <div class="body-flex">
+      <div class="main-col">
+        ${S.view==='home' ? renderHome() : S.view==='week' ? renderWeek() : S.view==='diary' ? renderDiary() : renderMonth()}
+      </div>
+      ${S.showTodos ? `<div class="resize-handle" id="resizeHandle"></div>${renderTodoPanel(todoWidth)}` : ''}
+    </div>
+    ${S.editingEvent ? renderEventModal() : ''}
+    ${S.editingTodo ? renderTodoModal() : ''}
+    ${S.showSettings ? renderSettingsModal() : ''}
+    ${S.showGoogle ? renderGoogleModal() : ''}
+    ${S.showWelcomeBackup ? renderWelcomeBackupModal() : ''}
+  `;
+}
+
+/* ================= HOME ================= */
+function greetingLine(L){
+  const hour = new Date().getHours();
+  const word = hour<12 ? L.gMorning : hour<18 ? L.gAfternoon : L.gEvening;
+  const name = (S.settings.displayName || '').trim() || S.session.username;
+  return S.settings.language==='ja' ? `${word}、${name}` : `${word}, ${name}`;
+}
+function dateLine(){
+  const now = new Date();
+  const opts = {weekday:'long', month:'long', day:'numeric'};
+  return now.toLocaleDateString(S.settings.language==='ja'?'ja-JP':'en-US', opts);
+}
+const MOOD_EMOJIS = ['😄','🙂','😐','😔','😢','😡','🤒','😴'];
+function computeUpcomingRaw(horizonDays){
+  const now = new Date();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const horizon = addDays(today, horizonDays || 30);
+  const items = [];
+  expandEventsInRange(today, horizon).forEach(ev => {
+    const [h,m] = ev.start.split(':').map(Number);
+    const when = parseDateLocal(ev.instanceDate);
+    when.setHours(h, m, 0, 0);
+    if(when <= now) return;
+    items.push({ type:'event', title: ev.title || t().newEvent, when, priority: ev.priority||'none', categoryId: ev.categoryId, catType:'event' });
+  });
+  S.todos.forEach(td => {
+    if(!td.dueDate) return;
+    const when = parseDateLocal(td.dueDate); when.setHours(23,59,0,0);
+    if(when < now || when > horizon) return;
+    if(isTodoDoneOn(td, parseDateLocal(td.dueDate))) return;
+    items.push({ type:'todo', title: td.text, when, priority: td.priority||'none', categoryId: td.categoryId, catType:'todo' });
+  });
+  items.sort((a,b) => a.when - b.when);
+  return items;
+}
+function computeComingUp(horizonDays){
+  return computeUpcomingRaw(horizonDays || 30).slice(0,8);
+}
+function formatTimeUntil(L, when){
+  const now = new Date();
+  let diffMin = Math.round((when - now) / 60000);
+  const ja = S.settings.language === 'ja';
+  if(diffMin < 1) return ja ? 'まもなく' : 'now';
+  const days = Math.floor(diffMin / 1440);
+  diffMin -= days * 1440;
+  const hours = Math.floor(diffMin / 60);
+  const mins = diffMin - hours * 60;
+  if(ja){
+    const parts = [];
+    if(days) parts.push(`${days}日`);
+    if(hours) parts.push(`${hours}時間`);
+    if(mins || parts.length===0) parts.push(`${mins}分`);
+    return parts.join(' ');
+  }
+  const parts = [];
+  if(days) parts.push(`${days} day${days>1?'s':''}`);
+  if(hours) parts.push(`${hours} hour${hours>1?'s':''}`);
+  if(mins || parts.length===0) parts.push(`${mins} minute${mins!==1?'s':''}`);
+  if(parts.length > 1) return parts.slice(0,-1).join(' ') + ' and ' + parts[parts.length-1];
+  return parts[0];
+}
+function isReminderCategory(cat){
+  if(!cat) return false;
+  return ['Test','Quiz','Project','テスト','小テスト','プロジェクト'].includes(cat.name);
+}
+function computeReminders(){
+  return computeUpcomingRaw(200).filter(it => isReminderCategory(catFor(S.categories[it.catType], it.categoryId))).slice(0,8);
+}
+const PRIORITY_COLORS = { high:'#e0555b', medium:'#f0b429', low:'#4caf7d' };
+function priorityDotHtml(priority){
+  if(!priority || priority==='none') return '';
+  return `<span class="priority-dot" style="background:${PRIORITY_COLORS[priority]};"></span>`;
+}
+function renderRemindersHtml(L){
+  const items = computeReminders();
+  if(!items.length) return `<div class="empty-note">${esc(L.noComingUp)}</div>`;
+  return items.map(it => {
+    const cat = catFor(S.categories[it.catType], it.categoryId);
+    const timeLabel = formatTimeUntil(L, it.when);
+    const dot = it.priority && it.priority!=='none' ? priorityDotHtml(it.priority) : `<span class="home-dot" style="background:${cat.color};"></span>`;
+    return `<div class="home-list-item">
+      ${dot}
+      <span style="flex:1;">${esc(it.title)} · ${esc(cat.name)}</span>
+      <span class="home-time">${esc(timeLabel)}</span>
+    </div>`;
+  }).join('');
+}
+function renderComingUpHtml(L){
+  const items = computeComingUp();
+  if(!items.length) return `<div class="empty-note">${esc(L.noComingUp)}</div>`;
+  return items.map(it => {
+    const cat = catFor(S.categories[it.catType], it.categoryId);
+    const timeLabel = formatTimeUntil(L, it.when);
+    const dot = it.priority && it.priority!=='none' ? priorityDotHtml(it.priority) : `<span class="home-dot" style="background:${cat?cat.color:accent()};"></span>`;
+    return `<div class="home-list-item">
+      ${dot}
+      <span style="flex:1;">${esc(it.title)}${cat?` · ${esc(cat.name)}`:''}</span>
+      <span class="home-time">${esc(timeLabel)}</span>
+    </div>`;
+  }).join('');
+}
+function renderMoodCardHtml(L){
+  const todayKey = dkey(new Date());
+  const todayMood = S.moods[todayKey];
+  const picker = MOOD_EMOJIS.map(m=>`<button type="button" class="mood-btn ${todayMood===m?'selected':''}" data-mood="${m}">${m}</button>`).join('');
+  const days = Array.from({length:7},(_,i)=>addDays(new Date(), -(6-i)));
+  const strip = days.map(d=>{
+    const m = S.moods[dkey(d)];
+    return `<div class="mood-history-item"><span>${m||'—'}</span><span class="mood-history-day">${d.getDate()}</span></div>`;
+  }).join('');
+  return `<div class="mood-picker">${picker}</div>
+    <div class="music-row" style="margin-bottom:12px;">
+      <input type="text" id="customMoodInput" placeholder="${esc(L.customMoodPlaceholder)}" maxlength="8" />
+      <button type="button" class="btn btn-outline btn-sm" id="setCustomMoodBtn">${esc(L.set)}</button>
+    </div>
+    <div class="mood-history">${strip}</div>`;
+}
+
+function renderHome(){
+  const L = t();
+  const now = new Date();
+  const todayInstances = expandEventsInRange(now, now).filter(e => e.instanceDate === dkey(now)).sort((a,b) => a.start.localeCompare(b.start));
+  const todayTodos = S.todos.filter(td => todoOccursOn(td, now));
+
+  const evHtml = todayInstances.length ? todayInstances.map(ev => {
+    const cat = catFor(S.categories.event, ev.categoryId);
+    const col = cat ? cat.color : (ev.color || accent());
+    return `<div class="home-list-item"><span class="home-dot" style="background:${col};"></span>
+      <span style="flex:1;">${esc(ev.title||L.newEvent)}${ev.location?` · ${esc(ev.location)}`:''}</span>
+      <span class="home-time">${esc(formatTimeDisplay(ev.start))}</span></div>`;
+  }).join('') : `<div class="empty-note">${esc(L.noEventsToday)}</div>`;
+
+  const tdHtml = todayTodos.length ? todayTodos.map(td => {
+    const cat = catFor(S.categories.todo, td.categoryId);
+    const done = isTodoDoneOn(td, now);
+    return `<div class="home-list-item" data-hometodo="${td.id}" style="cursor:pointer;">
+      <span class="home-dot" style="background:${cat?cat.color:accent()};"></span>
+      <span style="flex:1; ${done?'text-decoration:line-through;color:var(--ink-soft);':''}">${esc(td.text)}</span>
+      ${done?'✓':''}</div>`;
+  }).join('') : `<div class="empty-note">${esc(L.noTodosToday)}</div>`;
+
+  const q = todaysQuote();
+  const links = S.settings.musicLinks || [];
+  const nowPlaying = links.find(l => l.id === S.settings.nowPlayingId) || links[0] || null;
+  const embed = nowPlaying ? `<div class="music-embed-wrap"><iframe src="${esc(nowPlaying.embedUrl)}" width="100%" height="180" frameborder="0" allow="encrypted-media; autoplay" loading="lazy"></iframe></div>` : '';
+  const playlistHtml = links.length ? links.map(l => `
+    <div class="playlist-item ${nowPlaying && l.id===nowPlaying.id ? 'playing':''}" data-playtrack="${l.id}">
+      <span class="playlist-play">${nowPlaying && l.id===nowPlaying.id ? '♪' : '▶'}</span>
+      ${l.thumb ? `<img class="playlist-thumb" src="${esc(l.thumb)}" alt="" />` : ''}
+      <span class="playlist-label">${esc(l.label)}</span>
+      <button type="button" class="todo-x" data-removetrack="${l.id}">✕</button>
+    </div>`).join('') : `<div class="empty-note">${esc(L.playlistEmpty)}</div>`;
+
+  return `
+  <div class="home-scroll">
+    <div class="home-hero">
+      <div class="home-hero-greeting">${esc(greetingLine(L))}</div>
+      <div class="home-hero-time" id="liveClock">${new Date().toLocaleTimeString(S.settings.language==='ja'?'ja-JP':'en-US',{hour:'2-digit',minute:'2-digit', second: S.settings.clockSeconds?'2-digit':undefined})}</div>
+      <div class="home-hero-date">${esc(dateLine())}</div>
+    </div>
+    <div class="home-grid">
+      <div class="home-card" style="grid-column:1/-1;">
+        <h3>${esc(L.quoteOfDay)}</h3>
+        ${q ? `<div class="quote-text">"${esc(q)}"</div>` : `<div class="empty-note">${esc(L.noQuotes)}</div>`}
+      </div>
+      <div class="home-card">
+        <h3>${esc(L.todayEvents)}</h3>
+        ${evHtml}
+      </div>
+      <div class="home-card">
+        <h3>${esc(L.todayTodos)}</h3>
+        ${tdHtml}
+      </div>
+      <div class="home-card">
+        <h3>${esc(L.moodTracker)}</h3>
+        ${renderMoodCardHtml(L)}
+      </div>
+      <div class="home-card">
+        <h3>${esc(L.comingUp)}</h3>
+        ${renderComingUpHtml(L)}
+      </div>
+      <div class="home-card">
+        <h3>${esc(L.reminders)}</h3>
+        ${renderRemindersHtml(L)}
+      </div>
+      <div class="home-card" style="grid-column:1/-1;">
+        <h3>${esc(L.focusTimer)}</h3>
+        <div class="view-toggle" style="width:fit-content; margin:0 auto 6px;">
+          <button type="button" class="${S.timer.mode==='work'?'active':''}" id="setWorkMode">${esc(L.workLabel)}</button>
+          <button type="button" class="${S.timer.mode==='break'?'active':''}" id="setBreakMode">${esc(L.breakLabel)}</button>
+        </div>
+        <div class="timer-display" id="timerDisplay">${formatTime(S.timer.remaining)}</div>
+        ${S.alarmPlaying ? `<div style="text-align:center; margin-bottom:10px;"><button type="button" class="btn btn-danger" id="stopAlarmBtn">🔕 ${esc(L.stopAlarm)}</button></div>` : ''}
+        <div class="timer-controls">
+          <button type="button" class="btn btn-primary btn-sm" id="timerToggle">${S.timer.running?esc(L.pause):esc(L.start)}</button>
+          <button type="button" class="btn btn-outline btn-sm" id="timerReset">${esc(L.reset)}</button>
+        </div>
+        <div class="timer-durations">
+          <label for="workMinInput">${esc(L.workMinutesLabel)}</label>
+          <input type="number" id="workMinInput" min="1" max="180" value="${S.timer.workMinutes}" />
+          <label for="breakMinInput">${esc(L.breakMinutesLabel)}</label>
+          <input type="number" id="breakMinInput" min="1" max="180" value="${S.timer.breakMinutes}" />
+        </div>
+      </div>
+      <div class="home-card" style="grid-column:1/-1;">
+        <h3>${esc(L.music)}</h3>
+        <div class="music-row">
+          <input type="text" id="musicUrlInput" placeholder="${esc(L.musicPlaceholder)}" />
+        </div>
+        <div class="music-row" style="margin-top:6px;">
+          <input type="text" id="musicTitleInput" placeholder="${esc(L.musicTitlePlaceholder)}" />
+          <button type="button" class="btn btn-primary btn-sm" id="loadMusicBtn">${esc(L.loadMusic)}</button>
+        </div>
+        <div style="font-size:11px; color:var(--ink-soft); margin-top:6px;">${esc(L.musicHelp)}</div>
+        ${S.musicErr ? `<div class="auth-err">${esc(S.musicErr)}</div>` : ''}
+        ${nowPlaying ? `<div class="now-playing">${nowPlaying.thumb?`<img class="now-playing-thumb" src="${esc(nowPlaying.thumb)}" alt="" />`:`<span class="pulse"></span>`}${esc(L.nowPlaying)}: ${esc(nowPlaying.label)}</div>` : ''}
+        ${embed}
+        ${links.length>1 ? `
+        <div class="player-controls">
+          <button type="button" class="btn btn-outline btn-sm" id="prevTrackBtn">⏮ ${esc(L.prevTrack)}</button>
+          <button type="button" class="btn btn-outline btn-sm" id="shuffleTrackBtn">🔀 ${esc(L.shuffle)}</button>
+          <button type="button" class="btn btn-outline btn-sm" id="nextTrackBtn">${esc(L.nextTrack)} ⏭</button>
+        </div>` : ''}
+        <div class="playlist-list">${playlistHtml}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toEmbedInfo(url){
+  try{
+    const sp = url.match(/open\.spotify\.com\/(track|album|playlist|show|episode|artist)\/([a-zA-Z0-9]+)/);
+    if(sp){
+      const kind = sp[1].charAt(0).toUpperCase()+sp[1].slice(1);
+      return { embedUrl:`https://open.spotify.com/embed/${sp[1]}/${sp[2]}`, label:`Spotify ${kind}` };
+    }
+    const yv = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/) || url.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+    if(yv) return { embedUrl:`https://www.youtube.com/embed/${yv[1]}`, label:'YouTube Video' };
+    const yl = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+    if(yl) return { embedUrl:`https://www.youtube.com/embed/videoseries?list=${yl[1]}`, label:'YouTube Playlist' };
+    return null;
+  }catch(e){ return null; }
+}
+
+/* ================= WEEK ================= */
+function renderWeek(){
+  const L = t();
+  const start = startOfWeek(S.cursor);
+  const end = addDays(start,6);
+  const days = Array.from({length:7},(_,i)=>addDays(start,i));
+  const dayNames = [L.sun,L.mon,L.tue,L.wed,L.thu,L.fri,L.sat];
+  const now = new Date();
+  const HOUR_H = 52;
+  const instances = expandEventsInRange(start, end);
+
+  let head = `<div class="week-head"><div></div>`;
+  days.forEach(d=>{
+    head += `<div class="week-daycell">
+      <div class="week-dayname">${esc(dayNames[d.getDay()])}</div>
+      <div class="day-num ${sameDay(d,now)?'today':''}">${d.getDate()}</div>
+    </div>`;
+  });
+  head += `</div>`;
+
+  let alldayRow = `<div class="allday-row"><div></div>`;
+  days.forEach(d=>{
+    const key = dkey(d);
+    const dayTodos = todosOnDate(d);
+    const chips = dayTodos.map(td=>{
+      const cat = catFor(S.categories.todo, td.categoryId);
+      const done = isTodoDoneOn(td, d);
+      const col = cat ? cat.color : accent();
+      return `<div class="allday-chip" data-alldaytodo="${td.id}" style="background:${col}33; border-left:3px solid ${col}; ${done?'text-decoration:line-through; opacity:.6;':''}">${esc(td.text)}</div>`;
+    }).join('');
+    alldayRow += `<div class="allday-cell">${chips}</div>`;
+  });
+  alldayRow += `</div>`;
+
+  let hourLabels = '';
+  for(let h=0; h<24; h++){
+    const label = h===0 ? '' : (h<12 ? `${h} AM` : h===12 ? '12 PM' : `${h-12} PM`);
+    hourLabels += `<div class="hour-label">${label}</div>`;
+  }
+
+  let dayCols = '';
+  days.forEach(d=>{
+    const key = dkey(d);
+    let cells = '';
+    for(let h=0; h<24; h++){ cells += `<div class="hour-cell" data-date="${key}" data-hour="${h}"></div>`; }
+    let nowLine = '';
+    if(sameDay(d,now)){
+      const top = (now.getHours()*60+now.getMinutes())/60*HOUR_H;
+      nowLine = `<div class="now-line" style="top:${top}px;"><div class="now-dot"></div></div>`;
+    }
+    const dayEvents = instances.filter(e=>e.instanceDate===key);
+    let chips = '';
+    dayEvents.forEach(ev=>{
+      const [sh,sm] = ev.start.split(':').map(Number);
+      const [eh,em] = ev.end.split(':').map(Number);
+      const top = (sh*60+sm)/60*HOUR_H;
+      const height = Math.max(((eh*60+em)-(sh*60+sm))/60*HOUR_H, 22);
+      const cat = catFor(S.categories.event, ev.categoryId);
+      const col = cat ? cat.color : (ev.color || accent());
+      const rep = (ev.recurrence && ev.recurrence.type!=='none') ? `<span class="repeat-badge">↻</span>` : '';
+      chips += `<div class="event-chip" data-event="${ev.id}" style="top:${top}px; height:${height}px; background:${col}33; border-left:3px solid ${col};">
+        <b>${esc(ev.title || t().newEvent)} ${rep}</b>${esc(formatTimeDisplay(ev.start))}${ev.location?', '+esc(ev.location):''}
+      </div>`;
+    });
+    dayCols += `<div class="day-col">${cells}${nowLine}${chips}</div>`;
+  });
+
+  return `
+  <div class="week-scroll" id="weekScroll">
+    ${head}
+    ${alldayRow}
+    <div class="week-grid">
+      <div>${hourLabels}</div>
+      ${dayCols}
+    </div>
+  </div>`;
+}
+
+/* ================= MONTH ================= */
+function renderMonth(){
+  const L = t();
+  const gridStart = startOfMonthGrid(S.cursor);
+  const gridEnd = addDays(gridStart,41);
+  const days = Array.from({length:42},(_,i)=>addDays(gridStart,i));
+  const dayNames = [L.sun,L.mon,L.tue,L.wed,L.thu,L.fri,L.sat];
+  const now = new Date();
+  const instances = expandEventsInRange(gridStart, gridEnd);
+
+  let headRow = `<div class="month-headrow">` + dayNames.map(n=>`<div>${esc(n)}</div>`).join('') + `</div>`;
+  let rows = '';
+  for(let r=0;r<6;r++){
+    let row = `<div class="month-row">`;
+    days.slice(r*7,r*7+7).forEach(d=>{
+      const inMonth = d.getMonth() === S.cursor.getMonth();
+      const key = dkey(d);
+      const dayEvents = instances.filter(e=>e.instanceDate===key);
+      const dayTodos = todosOnDate(d);
+      let todoChips = dayTodos.slice(0,2).map(td=>{
+        const cat = catFor(S.categories.todo, td.categoryId);
+        const done = isTodoDoneOn(td, d);
+        const col = cat ? cat.color : accent();
+        return `<div class="month-chip" data-alldaytodo="${td.id}" style="background:${col}33; border-left:2px dashed ${col}; ${done?'text-decoration:line-through;opacity:.6;':''}">${esc(td.text)}</div>`;
+      }).join('');
+      let chips = dayEvents.slice(0,3).map(ev=>{
+        const cat = catFor(S.categories.event, ev.categoryId);
+        const col = cat ? cat.color : (ev.color || accent());
+        return `<div class="month-chip" data-event="${ev.id}" style="background:${col}33; border-left:2px solid ${col};">${esc(ev.title||t().newEvent)}</div>`;
+      }).join('');
+      const shown = Math.min(dayTodos.length,2) + Math.min(dayEvents.length,3);
+      const total = dayTodos.length + dayEvents.length;
+      const more = total>shown ? `<div style="font-size:10px;color:var(--ink-soft);">+${total-shown}</div>` : '';
+      row += `<div class="month-cell ${inMonth?'':'dim'}" data-day="${key}">
+        <div class="day-num ${sameDay(d,now)?'today':''}" style="width:22px;height:22px;font-size:11.5px;margin-bottom:4px;">${d.getDate()}</div>
+        ${todoChips}${chips}${more}
+      </div>`;
+    });
+    row += `</div>`;
+    rows += row;
+  }
+  return `<div class="month-wrap">${headRow}<div class="month-rows">${rows}</div></div>`;
+}
+
+/* ================= DIARY ================= */
+function diaryDateLabel(){
+  const L = t();
+  const d = S.cursor;
+  const opts = {weekday:'long', month:'long', day:'numeric', year:'numeric'};
+  return d.toLocaleDateString(S.settings.language==='ja'?'ja-JP':'en-US', opts);
+}
+function renderDiary(){
+  const L = t();
+  const key = dkey(S.cursor);
+  const content = S.diaryEntries[key] || '';
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const entries = Object.keys(S.diaryEntries)
+    .filter(k => S.diaryEntries[k] && S.diaryEntries[k].trim())
+    .sort((a,b) => b.localeCompare(a))
+    .slice(0, 20);
+  const entriesHtml = entries.length ? entries.map(k => {
+    const d = parseDateLocal(k);
+    const label = d.toLocaleDateString(S.settings.language==='ja'?'ja-JP':'en-US', {month:'short', day:'numeric', year:'numeric'});
+    const snippet = S.diaryEntries[k].trim().slice(0, 80);
+    return `<div class="diary-entry-item" data-diaryjump="${k}">
+      <div class="diary-entry-date">${esc(label)}</div>
+      <div class="diary-entry-snippet">${esc(snippet)}</div>
+    </div>`;
+  }).join('') : `<div class="empty-note">${esc(L.diaryNoEntries)}</div>`;
+
+  return `
+  <div class="diary-scroll">
+    <div class="diary-nav">
+      <button type="button" class="btn-icon" id="diaryPrev">‹</button>
+      <div class="diary-date-label">${esc(diaryDateLabel())}</div>
+      <button type="button" class="btn-icon" id="diaryNext">›</button>
+      <button type="button" class="btn btn-outline btn-sm" id="diaryToday">${esc(L.today)}</button>
+    </div>
+    <textarea class="diary-textarea" id="diaryTextarea" placeholder="${esc(L.diaryPlaceholder)}">${esc(content)}</textarea>
+    <div class="diary-status" id="diaryStatus">${wordCount} ${esc(L.diaryWordCount)}</div>
+    <div class="home-card" style="margin-top:18px;">
+      <h3>${esc(L.diaryPastEntries)}</h3>
+      ${entriesHtml}
+    </div>
+  </div>`;
+}
+
+/* ================= TODO PANEL (side, resizable) ================= */
+function renderTodoPanel(width){
+  const L = t();
+  const now = new Date();
+  const items = S.todos.map(td => {
+    const cat = catFor(S.categories.todo, td.categoryId);
+    const done = isTodoDoneOn(td, now);
+    const rep = (td.recurrence && td.recurrence.type!=='none') ? `<span class="mini-badge">↻</span>` : '';
+    const due = td.dueDate ? `<span class="mini-badge">${td.dueDate}</span>` : '';
+    return `
+    <div class="todo-item">
+      <div class="todo-check ${done?'done':''}" data-toggle="${td.id}">${done?'✓':''}</div>
+      <div class="todo-body" data-edittodo="${td.id}">
+        <div class="todo-text ${done?'done':''}">${esc(td.text)}</div>
+        <div class="todo-meta">${cat?`<span class="cat-dot" style="background:${cat.color};"></span><span class="mini-badge">${esc(cat.name)}</span>`:''}${rep}${due}</div>
+      </div>
+      <button type="button" class="todo-x" data-remove="${td.id}">✕</button>
+    </div>`;
+  }).join('');
+  return `
+  <div class="todo-panel" style="width:${width}px;">
+    <div class="todo-title">${esc(L.todos)}</div>
+    <form class="todo-form" id="todoForm">
+      <input type="text" id="todoInput" placeholder="${esc(L.addTodo)}" />
+      <button type="submit" class="btn-icon" style="background:var(--accent); color:#fff; border-color:var(--accent);">+</button>
+      <button type="button" class="btn btn-outline btn-text-sm" id="btnTodoDetails">${esc(L.moreDetails)}</button>
+    </form>
+    <div class="todo-list">${items || `<div class="empty-note">${esc(L.noTodos)}</div>`}</div>
+  </div>`;
+}
+
+function describeRecurrence(rec, L){
+  if(!rec || rec.type === 'none') return L.repeatNone;
+  let base = rec.type==='weekly' ? L.repeatWeekly : rec.type==='monthly' ? L.repeatMonthly : rec.type==='yearly' ? L.repeatYearly : L.repeatNone;
+  if((rec.type==='weekly'||rec.type==='monthly') && rec.weekdays && rec.weekdays.length){
+    base += ' (' + rec.weekdays.map(i=>wdShort(S.settings.language,i)).join(', ') + ')';
+  }
+  if(rec.until) base += ` — ${L.repeatUntil.replace(' (optional)','').replace('（任意）','')}: ${rec.until}`;
+  return base;
+}
+function renderEventDetailsView(L, ev){
+  const cat = catFor(S.categories.event, ev.categoryId);
+  const col = cat ? cat.color : (ev.color || accent());
+  const prioName = {none:L.priorityNone, low:L.priorityLow, medium:L.priorityMedium, high:L.priorityHigh}[ev.priority||'none'];
+  return `
+  <div class="overlay" id="eventOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${esc(ev.title||L.newEvent)}</span><button type="button" class="btn-icon" id="closeEventModal">✕</button></div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+        <span class="cat-dot" style="width:12px;height:12px;background:${col};"></span>
+        <span style="font-size:13px; color:var(--ink-soft);">${cat?esc(cat.name):esc(L.noCategory)}</span>
+      </div>
+      <div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.date)}:</b> ${ev.date}</div>
+      <div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.startTime)}–${esc(L.endTime)}:</b> ${esc(formatTimeDisplay(ev.start))} – ${esc(formatTimeDisplay(ev.end))}</div>
+      ${ev.location ? `<div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.location)}:</b> ${esc(ev.location)}</div>` : ''}
+      <div style="font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:6px;"><b>${esc(L.priority)}:</b> ${priorityDotHtml(ev.priority)}${esc(prioName)}</div>
+      <div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.repeat)}:</b> ${esc(describeRecurrence(ev.recurrence, L))}</div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="deleteEvent">${esc(L.delete)}</button>
+        <button type="button" class="btn btn-primary" id="editEventBtn">✎ ${esc(L.editEvent)}</button>
+      </div>
+    </div>
+  </div>`;
+}
+/* ================= EVENT MODAL ================= */
+function prioritySelectHtml(L, priority, idPrefix){
+  const opts = [['none',L.priorityNone],['low',L.priorityLow],['medium',L.priorityMedium],['high',L.priorityHigh]];
+  return `
+  <label class="field-label">${esc(L.priority)}</label>
+  <div style="display:flex; gap:6px;" id="${idPrefix}PriorityRow">
+    ${opts.map(([id,name])=>`<button type="button" class="btn btn-outline btn-sm ${((priority||'none')===id)?'active':''}" data-priority="${id}" style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px;">${priorityDotHtml(id)}${esc(name)}</button>`).join('')}
+  </div>`;
+}
+function wirePrioritySelect(prefix, target){
+  document.querySelectorAll(`#${prefix}PriorityRow [data-priority]`).forEach(btn=>{
+    btn.addEventListener('click', () => { target.priority = btn.dataset.priority; render(); });
+  });
+}
+function repeatSelectHtml(L, rec, idPrefix){
+  return `
+  <label class="field-label">${esc(L.repeat)}</label>
+  <select id="${idPrefix}Repeat">
+    <option value="none" ${rec.type==='none'?'selected':''}>${esc(L.repeatNone)}</option>
+    <option value="weekly" ${rec.type==='weekly'?'selected':''}>${esc(L.repeatWeekly)}</option>
+    <option value="monthly" ${rec.type==='monthly'?'selected':''}>${esc(L.repeatMonthly)}</option>
+    <option value="yearly" ${rec.type==='yearly'?'selected':''}>${esc(L.repeatYearly)}</option>
+  </select>
+  ${(rec.type==='weekly' || rec.type==='monthly') ? `
+  <div class="weekday-chips" id="${idPrefix}Weekdays">
+    ${[0,1,2,3,4,5,6].map(i=>`<button type="button" class="wd-chip ${((rec.weekdays||[]).includes(i))?'active':''}" data-wd="${i}">${esc(wdShort(S.settings.language,i))}</button>`).join('')}
+  </div>
+  ${rec.type==='monthly' ? `<div class="empty-note" style="margin-top:4px;">${esc(L.monthlyWeekdayHint)}</div>` : ''}` : ''}
+  ${rec.type!=='none' ? `
+  <label class="field-label">${esc(L.repeatUntil)}</label>
+  <input type="date" id="${idPrefix}Until" value="${rec.until||''}" />` : ''}`;
+}
+function categorySelectHtml(L, type, categoryId, idPrefix){
+  const cats = S.categories[type] || [];
+  return `
+  <label class="field-label">${esc(L.category)}</label>
+  <select id="${idPrefix}Category">
+    <option value="">${esc(L.noCategory)}</option>
+    ${cats.map(c=>`<option value="${c.id}" ${categoryId===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}
+    <option value="__new__">${esc(L.newCategory)}</option>
+  </select>
+  <div id="${idPrefix}NewCat" style="display:none; margin-top:6px;">
+    <div class="cat-row">
+      <input type="text" id="${idPrefix}NewCatName" placeholder="${esc(L.categoryName)}" />
+      ${ACCENTS.map(c=>`<div class="swatch" data-newcatcolor="${c}" style="background:${c}; width:18px;height:18px;"></div>`).join('')}
+      <button type="button" class="btn btn-primary btn-sm" id="${idPrefix}AddCatBtn">${esc(L.addCategory)}</button>
+    </div>
+  </div>`;
+}
+
+function renderEventModal(){
+  const L = t();
+  const ev = S.editingEvent;
+  if(!ev._new && S.eventViewMode) return renderEventDetailsView(L, ev);
+  const swatches = ACCENTS.map(c=>`<div class="swatch ${ev.color===c?'selected':''}" data-color="${c}" style="background:${c};"></div>`).join('');
+  return `
+  <div class="overlay" id="eventOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${ev._new?esc(L.newEvent):esc(L.editEvent)}</span><button type="button" class="btn-icon" id="closeEventModal">✕</button></div>
+      <label class="field-label">${esc(L.title)}</label>
+      <input type="text" id="evTitle" value="${esc(ev.title)}" />
+      <label class="field-label">${esc(L.date)}</label>
+      <input type="date" id="evDate" value="${ev.date}" />
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;"><label class="field-label">${esc(L.startTime)}</label><input type="time" id="evStart" value="${ev.start}" /></div>
+        <div style="flex:1;"><label class="field-label">${esc(L.endTime)}</label><input type="time" id="evEnd" value="${ev.end}" /></div>
+      </div>
+      <label class="field-label">${esc(L.location)}</label>
+      <input type="text" id="evLocation" value="${esc(ev.location)}" />
+      ${categorySelectHtml(L, 'event', ev.categoryId, 'ev')}
+      <label class="field-label">${esc(L.color)}</label>
+      <div style="display:flex; gap:8px; margin-top:4px;" id="evSwatches">${swatches}</div>
+      ${prioritySelectHtml(L, ev.priority, 'ev')}
+      ${repeatSelectHtml(L, ev.recurrence||{type:'none'}, 'ev')}
+      <div class="modal-actions">
+        ${ev._new ? '<span></span>' : `<button type="button" class="btn btn-danger" id="deleteEvent">${esc(L.delete)}</button>`}
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-outline" id="cancelEvent">${esc(L.cancel)}</button>
+          <button type="button" class="btn btn-primary" id="saveEvent">${esc(L.save)}</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTodoDetailsView(L, td){
+  const cat = catFor(S.categories.todo, td.categoryId);
+  const prioName = {none:L.priorityNone, low:L.priorityLow, medium:L.priorityMedium, high:L.priorityHigh}[td.priority||'none'];
+  return `
+  <div class="overlay" id="todoOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${esc(td.text)}</span><button type="button" class="btn-icon" id="closeTodoModal">✕</button></div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+        ${cat?`<span class="cat-dot" style="width:12px;height:12px;background:${cat.color};"></span><span style="font-size:13px; color:var(--ink-soft);">${esc(cat.name)}</span>`:`<span style="font-size:13px; color:var(--ink-soft);">${esc(L.noCategory)}</span>`}
+      </div>
+      ${td.description ? `<div style="font-size:14px; margin-bottom:6px; white-space:pre-wrap;">${esc(td.description)}</div>` : ''}
+      ${td.dueDate ? `<div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.dueDate.replace(' (optional)','').replace('（任意）',''))}:</b> ${td.dueDate}</div>` : ''}
+      ${td.durationMinutes ? `<div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.duration.replace(' (minutes, optional)','').replace('（分・任意）',''))}:</b> ${td.durationMinutes} ${esc(L.durationBadge)}</div>` : ''}
+      <div style="font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:6px;"><b>${esc(L.priority)}:</b> ${priorityDotHtml(td.priority)}${esc(prioName)}</div>
+      <div style="font-size:14px; margin-bottom:6px;"><b>${esc(L.repeat)}:</b> ${esc(describeRecurrence(td.recurrence, L))}</div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="deleteTodo">${esc(L.delete)}</button>
+        <button type="button" class="btn btn-primary" id="editTodoBtn">✎ ${esc(L.moreDetails)}</button>
+      </div>
+    </div>
+  </div>`;
+}
+/* ================= TODO MODAL ================= */
+function renderTodoModal(){
+  const L = t();
+  const td = S.editingTodo;
+  if(!td._new && S.todoViewMode) return renderTodoDetailsView(L, td);
+  return `
+  <div class="overlay" id="todoOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${esc(L.moreDetails)}</span><button type="button" class="btn-icon" id="closeTodoModal">✕</button></div>
+      <label class="field-label">${esc(L.title)}</label>
+      <input type="text" id="tdText" value="${esc(td.text)}" />
+      <label class="field-label">${esc(L.description)}</label>
+      <textarea id="tdDescription">${esc(td.description)}</textarea>
+      <label class="field-label">${esc(L.dueDate)}</label>
+      <input type="date" id="tdDueDate" value="${td.dueDate||''}" />
+      <label class="field-label">${esc(L.duration)}</label>
+      <input type="number" id="tdDuration" min="1" max="1440" value="${td.durationMinutes||''}" placeholder="30" />
+      ${categorySelectHtml(L, 'todo', td.categoryId, 'td')}
+      ${prioritySelectHtml(L, td.priority, 'td')}
+      ${repeatSelectHtml(L, td.recurrence||{type:'none'}, 'td')}
+      <div class="modal-actions">
+        ${td._new ? '<span></span>' : `<button type="button" class="btn btn-danger" id="deleteTodo">${esc(L.delete)}</button>`}
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-outline" id="cancelTodo">${esc(L.cancel)}</button>
+          <button type="button" class="btn btn-primary" id="saveTodo">${esc(L.save)}</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ================= SETTINGS MODAL ================= */
+function catManagerHtml(L, type, label){
+  const cats = S.categories[type] || [];
+  return `
+  <div class="field-label">${esc(label)}</div>
+  ${cats.length ? cats.map(c=>`
+    <div class="cat-row">
+      <input type="color" data-editcat="${c.id}" data-cattype="${type}" value="${c.color}" style="width:22px;height:22px;border:none;padding:0;background:none;cursor:pointer;" />
+      <span style="flex:1; font-size:12.5px;">${esc(c.name)}</span>
+      <button type="button" class="todo-x" data-delcat="${c.id}" data-cattype="${type}">✕</button>
+    </div>`).join('') : `<div class="empty-note" style="margin-bottom:8px;">${esc(L.noCats)}</div>`}
+  `;
+}
+function quotesManagerHtml(L){
+  const quotes = S.settings.quotes || [];
+  return `
+  <div class="music-row" style="margin-bottom:8px;">
+    <input type="text" id="newQuoteInput" placeholder="${esc(L.quotePlaceholder)}" />
+    <button type="button" class="btn btn-primary btn-sm" id="addQuoteBtn">${esc(L.addQuote)}</button>
+  </div>
+  ${quotes.length ? quotes.map((q,i)=>`
+    <div class="cat-row">
+      <span style="flex:1; font-size:12.5px;">${esc(q)}</span>
+      <button type="button" class="todo-x" data-delquote="${i}">✕</button>
+    </div>`).join('') : `<div class="empty-note" style="margin-bottom:8px;">${esc(L.noQuotes)}</div>`}
+  `;
+}
+function renderSettingsModal(){
+  const L = t();
+  const swatches = ACCENTS.map(c=>`<div class="swatch ${S.settings.accent===c?'selected':''}" data-accent="${c}" style="background:${c};"></div>`).join('');
+  let notifStatus = L.notifOn;
+  if(S.notifPermission === 'denied') notifStatus = L.notifBlocked;
+  if(S.notifPermission === 'unsupported') notifStatus = L.notifUnsupported;
+  return `
+  <div class="overlay" id="settingsOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${esc(L.settings)}</span><button type="button" class="btn-icon" id="closeSettingsModal">✕</button></div>
+      <div class="field-label">${esc(L.account)}</div>
+      <div style="font-size:14px; margin-bottom:6px;">${esc(S.session.username)}</div>
+      <label class="field-label">${esc(L.displayName)}</label>
+      <input type="text" id="displayNameInput" value="${esc(S.settings.displayName||'')}" />
+      <div class="remember-row" style="margin-top:12px;">
+        <input type="checkbox" class="check" id="clockSecondsToggle" ${S.settings.clockSeconds?'checked':''} />
+        <label class="remember-label" for="clockSecondsToggle">${esc(L.clockSeconds)}</label>
+      </div>
+      <div class="field-label" style="margin-top:14px;">${esc(L.language)}</div>
+      <div style="display:flex; gap:8px; margin-bottom:6px;">
+        <button type="button" class="btn btn-outline ${S.settings.language==='en'?'active':''}" data-lang="en" style="flex:1;">English</button>
+        <button type="button" class="btn btn-outline ${S.settings.language==='ja'?'active':''}" data-lang="ja" style="flex:1;">日本語</button>
+      </div>
+      <div class="field-label" style="margin-top:14px;">${esc(L.themeMode)}</div>
+      <div style="display:flex; gap:8px; margin-bottom:6px;">
+        <button type="button" class="btn btn-outline ${S.settings.themeMode==='light'?'active':''}" data-theme="light" style="flex:1;">☀ ${esc(L.lightMode)}</button>
+        <button type="button" class="btn btn-outline ${S.settings.themeMode==='dark'?'active':''}" data-theme="dark" style="flex:1;">☾ ${esc(L.darkMode)}</button>
+      </div>
+      <div class="field-label">${esc(L.accentColor)}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;" id="settingsSwatches">
+        ${swatches}
+        <input type="color" id="customAccent" value="${S.settings.accent}" style="width:24px;height:24px;border:none;background:none;padding:0;cursor:pointer;" />
+      </div>
+      <div class="field-label">${esc(L.font)}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;" id="fontPicker">
+        ${FONTS.map(f=>`<button type="button" class="btn btn-outline ${S.settings.font===f.id?'active':''}" data-font="${f.id}" style="font-family:${f.css};">${esc(f.name)}</button>`).join('')}
+      </div>
+      <div class="field-label">${esc(L.timerSound)}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;" id="soundPicker">
+        ${[['chime',L.soundChime],['beep',L.soundBeep],['bell',L.soundBell],['none',L.soundNone]].map(([id,name])=>`<button type="button" class="btn btn-outline ${S.settings.timerSound===id?'active':''}" data-sound="${id}">${esc(name)}</button>`).join('')}
+      </div>
+      <div class="field-label" style="margin-top:14px;">${esc(L.quotes)}</div>
+      ${quotesManagerHtml(L)}
+      <div class="field-label" style="margin-top:14px;">${esc(L.manageCategories)}</div>
+      ${catManagerHtml(L,'event',L.eventCategories)}
+      ${catManagerHtml(L,'todo',L.todoCategories)}
+      <div class="field-label" style="margin-top:14px;">${esc(L.notifications)}</div>
+      <button type="button" class="btn btn-outline" id="enableNotif" style="width:100%; margin-bottom:6px;" ${S.notifPermission!=='default'?'disabled':''}>${esc(L.enableNotifications)}</button>
+      <div class="empty-note" style="margin-bottom:10px;">${esc(notifStatus)}</div>
+      <div class="field-label" style="margin-top:14px;">${esc(L.backupTitle)}</div>
+      <div class="empty-note" style="margin-bottom:8px;">${esc(L.backupBody)}</div>
+      <textarea id="backupCodeBox" rows="3" readonly style="font-size:11px; margin-bottom:8px;">${esc(exportBackupCode())}</textarea>
+      <button type="button" class="btn btn-outline" id="exportBtn" style="width:100%; margin-bottom:10px;">${S.exportCopiedFlash?esc(L.exportCopied):esc(L.exportBtn)}</button>
+      <label class="field-label">${esc(L.restoreLink)}</label>
+      <textarea id="settingsRestoreInput" rows="3" placeholder="${esc(L.restorePlaceholder)}"></textarea>
+      ${S.restoreErr ? `<div class="auth-err">${esc(S.restoreErr)}</div>` : ''}
+      <button type="button" class="btn btn-outline" id="settingsRestoreBtn" style="width:100%; margin-top:8px; margin-bottom:10px;">${esc(L.restoreBtn)}</button>
+      <button type="button" class="btn btn-outline" id="openGoogle" style="width:100%; margin-top:6px;">${esc(L.googleSync)}</button>
+      <button type="button" class="btn btn-danger" id="doSignOut" style="width:100%; margin-top:10px;">${esc(L.signOut)}</button>
+    </div>
+  </div>`;
+}
+
+function renderWelcomeBackupModal(){
+  const L = t();
+  return `
+  <div class="overlay" id="welcomeBackupOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${esc(L.welcomeBackupTitle)}</span></div>
+      <p style="font-size:13px; line-height:1.6; color:var(--ink-soft);">${esc(L.welcomeBackupBody)}</p>
+      <textarea id="welcomeBackupCode" rows="3" readonly style="font-size:11px; margin-bottom:10px;">${esc(exportBackupCode())}</textarea>
+      <button type="button" class="btn btn-primary" style="width:100%;" id="welcomeCopyBtn">${esc(L.exportBtn)}</button>
+      <button type="button" class="btn btn-outline" style="width:100%; margin-top:8px;" id="welcomeGotItBtn">${esc(L.gotIt)}</button>
+    </div>
+  </div>`;
+}
+
+function renderGoogleModal(){
+  const L = t();
+  return `
+  <div class="overlay" id="googleOverlay">
+    <div class="card modal">
+      <div class="modal-head"><span>${esc(L.googleSync)}</span><button type="button" class="btn-icon" id="closeGoogleModal">✕</button></div>
+      <p style="font-size:13px; line-height:1.6; color:var(--ink-soft);">${esc(L.googleSyncBody)}</p>
+      <button type="button" class="btn btn-outline" id="closeGoogleModal2" style="width:100%;">${esc(L.close)}</button>
+    </div>
+  </div>`;
+}
+
+/* ================= search (targeted DOM updates — no full re-render per keystroke) ================= */
+function getSearchSections(){
+  const L = t();
+  return [
+    { label: L.home, go: () => { S.view='home'; } },
+    { label: L.week, go: () => { S.view='week'; S.forceScrollToNow=true; } },
+    { label: L.month, go: () => { S.view='month'; } },
+    { label: L.diary, go: () => { S.view='diary'; } },
+    { label: L.comingUp, go: () => { S.view='home'; } },
+    { label: L.reminders, go: () => { S.view='home'; } },
+    { label: L.moodTracker, go: () => { S.view='home'; } },
+    { label: L.focusTimer, go: () => { S.view='home'; } },
+    { label: L.music, go: () => { S.view='home'; } },
+    { label: L.todos, go: () => { S.showTodos = true; } },
+    { label: L.settings, go: () => { S.showSettings = true; } },
+  ];
+}
+function updateSearchResults(query){
+  const dropdown = document.getElementById('searchResults');
+  if(!dropdown) return;
+  S.searchQuery = query;
+  const q = query.trim().toLowerCase();
+  if(!q){ dropdown.style.display='none'; dropdown.innerHTML=''; return; }
+
+  const evMatches = S.events.filter(e => (e.title||'').toLowerCase().includes(q) || (e.location||'').toLowerCase().includes(q)).slice(0,5);
+  const tdMatches = S.todos.filter(td => (td.text||'').toLowerCase().includes(q) || (td.description||'').toLowerCase().includes(q)).slice(0,5);
+  const catMatches = [...(S.categories.event||[]), ...(S.categories.todo||[])].filter(c => (c.name||'').toLowerCase().includes(q)).slice(0,3);
+  const musicMatches = (S.settings.musicLinks||[]).filter(m => (m.label||'').toLowerCase().includes(q)).slice(0,3);
+  const sectionMatches = getSearchSections().filter(s => s.label.toLowerCase().startsWith(q)).slice(0,5);
+
+  if(!evMatches.length && !tdMatches.length && !catMatches.length && !musicMatches.length && !sectionMatches.length){
+    dropdown.innerHTML = `<div class="search-empty">${esc(t().searchNoResults)}</div>`;
+  } else {
+    dropdown.innerHTML = [
+      ...sectionMatches.map((s,i)=>`<div class="search-item" data-jumpsection="${i}"><b>${esc(s.label)}</b></div>`),
+      ...evMatches.map(e=>`<div class="search-item" data-jumpevent="${e.id}"><b>${esc(e.title||t().newEvent)}</b><span>${e.date}</span></div>`),
+      ...tdMatches.map(td=>`<div class="search-item" data-jumptodo="${td.id}"><b>${esc(td.text)}</b><span>${td.dueDate||''}</span></div>`),
+      ...catMatches.map(c=>`<div class="search-item" data-jumpcat="1"><span class="cat-dot" style="background:${c.color}; margin-right:2px;"></span><b>${esc(c.name)}</b></div>`),
+      ...musicMatches.map(m=>`<div class="search-item" data-jumpmusic="${m.id}"><b>${esc(m.label)}</b></div>`),
+    ].join('');
+    const sections = sectionMatches;
+    dropdown.querySelectorAll('[data-jumpsection]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        sections[Number(el.dataset.jumpsection)].go();
+        S.searchQuery=''; render();
+      });
+    });
+    dropdown.querySelectorAll('[data-jumpevent]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const ev = S.events.find(x=>x.id===el.dataset.jumpevent);
+        if(ev){ S.cursor = parseDateLocal(ev.date); S.view='week'; S.forceScrollToNow=true; S.searchQuery=''; render(); }
+      });
+    });
+    dropdown.querySelectorAll('[data-jumptodo]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const td = S.todos.find(x=>x.id===el.dataset.jumptodo);
+        if(td){ S.showTodos = true; S.editingTodo = JSON.parse(JSON.stringify(td)); S.todoViewMode = true; S.searchQuery=''; render(); }
+      });
+    });
+    dropdown.querySelectorAll('[data-jumpcat]').forEach(el=>{
+      el.addEventListener('click', ()=>{ S.showSettings = true; S.searchQuery=''; render(); });
+    });
+    dropdown.querySelectorAll('[data-jumpmusic]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        S.settings.nowPlayingId = el.dataset.jumpmusic; persistSettings();
+        S.view = 'home'; S.searchQuery=''; render();
+      });
+    });
+  }
+  dropdown.style.display='block';
+}
+
+/* ================= event wiring ================= */
+function wireEvents(){
+  if(!S.session){
+    document.getElementById('tabSignIn').addEventListener('click', () => { S.authMode='signIn'; S.authErr=''; render(); });
+    document.getElementById('tabCreate').addEventListener('click', () => { S.authMode='createAccount'; S.authErr=''; render(); });
+    const doSubmit = () => {
+      if(S.authBusy) return;
+      const u = document.getElementById('authUser').value;
+      const p = document.getElementById('authPass').value;
+      const remember = document.getElementById('authRemember').checked;
+      submitAuth(u,p,remember);
+    };
+    document.getElementById('authSubmitBtn').addEventListener('click', doSubmit);
+    document.getElementById('authPass').addEventListener('keydown', (e) => { if(e.key === 'Enter') doSubmit(); });
+    document.getElementById('authUser').addEventListener('keydown', (e) => { if(e.key === 'Enter') doSubmit(); });
+    const showRestoreBtn = document.getElementById('showRestoreBtn');
+    if(showRestoreBtn) showRestoreBtn.addEventListener('click', () => { S.showRestore = true; S.restoreErr=''; render(); });
+    const hideRestoreBtn = document.getElementById('hideRestoreBtn');
+    if(hideRestoreBtn) hideRestoreBtn.addEventListener('click', () => { S.showRestore = false; S.restoreErr=''; render(); });
+    const restoreBtn = document.getElementById('restoreBtn');
+    if(restoreBtn) restoreBtn.addEventListener('click', () => {
+      const code = document.getElementById('restoreInput').value;
+      if(!code.trim()){ S.restoreErr = t().restoreError; render(); return; }
+      importBackupCode(code);
+    });
+    return;
+  }
+
+  document.getElementById('btnToday').addEventListener('click', () => { S.cursor = new Date(); S.view='week'; S.forceScrollToNow=true; render(); });
+  document.getElementById('btnPrev').addEventListener('click', () => {
+    S.cursor = S.view==='week' ? addDays(S.cursor,-7) : new Date(S.cursor.getFullYear(), S.cursor.getMonth()-1, 1);
+    render();
+  });
+  document.getElementById('btnNext').addEventListener('click', () => {
+    S.cursor = S.view==='week' ? addDays(S.cursor,7) : new Date(S.cursor.getFullYear(), S.cursor.getMonth()+1, 1);
+    render();
+  });
+  document.getElementById('btnHome').addEventListener('click', () => { S.view='home'; render(); });
+  document.getElementById('btnWeek').addEventListener('click', () => { S.view='week'; S.forceScrollToNow=true; render(); });
+  document.getElementById('btnMonth').addEventListener('click', () => { S.view='month'; render(); });
+  document.getElementById('btnDiary').addEventListener('click', () => { S.view='diary'; render(); });
+  document.getElementById('btnToggleTodos').addEventListener('click', () => { S.showTodos = !S.showTodos; render(); });
+  document.getElementById('btnNewEvent').addEventListener('click', () => { S.editingEvent = blankEvent(S.view==='week'||S.view==='month'?S.cursor:new Date()); S.eventViewMode = false; render(); });
+  document.getElementById('btnSettings').addEventListener('click', () => { S.showSettings = true; render(); });
+
+  const searchInput = document.getElementById('searchInput');
+  if(searchInput){
+    searchInput.addEventListener('input', (e) => updateSearchResults(e.target.value));
+    document.addEventListener('click', function outsideSearch(e){
+      const box = searchInput.closest('.search-box');
+      if(box && !box.contains(e.target)){ const dd = document.getElementById('searchResults'); if(dd) dd.style.display='none'; }
+    }, {once:true});
+    if(S.searchQuery) updateSearchResults(S.searchQuery);
+  }
+
+  const resizeHandle = document.getElementById('resizeHandle');
+  if(resizeHandle) resizeHandle.addEventListener('pointerdown', () => { resizingPanel = true; document.body.style.userSelect='none'; });
+
+  document.querySelectorAll('.event-chip, .month-chip').forEach(el=>{
+    el.addEventListener('click', (e) => { e.stopPropagation(); const ev = S.events.find(x=>x.id===el.dataset.event); if(ev){ S.editingEvent = {...ev}; S.eventViewMode = true; render(); } });
+  });
+  document.querySelectorAll('[data-alldaytodo]').forEach(el=>{
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const td = S.todos.find(x=>x.id===el.dataset.alldaytodo);
+      if(td){ S.editingTodo = JSON.parse(JSON.stringify(td)); S.todoViewMode = true; render(); }
+    });
+  });
+  document.querySelectorAll('.hour-cell').forEach(el=>{
+    el.addEventListener('dblclick', () => {
+      const [y,m,d] = el.dataset.date.split('-').map(Number);
+      const date = new Date(y, m-1, d);
+      S.editingEvent = blankEvent(date);
+      S.editingEvent.start = `${pad(Number(el.dataset.hour))}:00`;
+      S.editingEvent.end = `${pad(Number(el.dataset.hour)+1)}:00`;
+      S.eventViewMode = false;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-day]').forEach(el=>{
+    el.addEventListener('click', () => {
+      clearTimeout(_dayClickTimer);
+      const key = el.dataset.day;
+      _dayClickTimer = setTimeout(() => {
+        const [y,m,d] = key.split('-').map(Number);
+        S.cursor = new Date(y, m-1, d);
+        S.view = 'week'; S.forceScrollToNow = true;
+        render();
+      }, 260);
+    });
+    el.addEventListener('dblclick', () => {
+      clearTimeout(_dayClickTimer);
+      const [y,m,d] = el.dataset.day.split('-').map(Number);
+      S.editingEvent = blankEvent(new Date(y, m-1, d));
+      S.eventViewMode = false;
+      render();
+    });
+  });
+
+  if(S.view==='home'){
+    document.querySelectorAll('[data-hometodo]').forEach(el=>{
+      el.addEventListener('click', () => {
+        const td = S.todos.find(x=>x.id===el.dataset.hometodo);
+        if(td){ toggleTodoOn(td, new Date()); render(); }
+      });
+    });
+    document.querySelectorAll('[data-mood]').forEach(el=>{
+      el.addEventListener('click', () => {
+        const todayKey = dkey(new Date());
+        S.moods = S.moods || {};
+        S.moods[todayKey] = (S.moods[todayKey] === el.dataset.mood) ? undefined : el.dataset.mood;
+        if(S.moods[todayKey] === undefined) delete S.moods[todayKey];
+        persistMoods();
+        render();
+      });
+    });
+    const setCustomMoodBtn = document.getElementById('setCustomMoodBtn');
+    if(setCustomMoodBtn) setCustomMoodBtn.addEventListener('click', () => {
+      const val = document.getElementById('customMoodInput').value.trim();
+      if(!val) return;
+      const todayKey = dkey(new Date());
+      S.moods = S.moods || {};
+      S.moods[todayKey] = val;
+      persistMoods();
+      render();
+    });
+    const timerToggle = document.getElementById('timerToggle');
+    if(timerToggle) timerToggle.addEventListener('click', () => {
+      if(!S.timer.running && S.timer.remaining===0) S.timer.remaining = S.timer.total;
+      S.timer.running = !S.timer.running;
+      const ctx = getAudioCtx();
+      if(ctx && ctx.state === 'suspended') ctx.resume().catch(()=>{});
+      render();
+    });
+    const stopAlarmBtn = document.getElementById('stopAlarmBtn');
+    if(stopAlarmBtn) stopAlarmBtn.addEventListener('click', stopAlarm);
+    const timerReset = document.getElementById('timerReset');
+    if(timerReset) timerReset.addEventListener('click', () => { S.timer.running=false; S.timer.remaining=S.timer.total; if(S.alarmPlaying) stopAlarm(); render(); });
+    const setWorkMode = document.getElementById('setWorkMode');
+    if(setWorkMode) setWorkMode.addEventListener('click', () => {
+      S.timer.mode = 'work';
+      S.timer.total = S.timer.workMinutes*60;
+      S.timer.remaining = S.timer.workMinutes*60;
+      if(S.alarmPlaying) stopAlarm();
+      render();
+    });
+    const setBreakMode = document.getElementById('setBreakMode');
+    if(setBreakMode) setBreakMode.addEventListener('click', () => {
+      S.timer.mode = 'break';
+      S.timer.total = S.timer.breakMinutes*60;
+      S.timer.remaining = S.timer.breakMinutes*60;
+      if(S.alarmPlaying) stopAlarm();
+      render();
+    });
+    const workMinInput = document.getElementById('workMinInput');
+    if(workMinInput) workMinInput.addEventListener('change', (e) => {
+      const mins = Math.max(1, Math.min(180, parseInt(e.target.value,10) || 25));
+      S.timer.workMinutes = mins;
+      if(S.timer.mode === 'work' && !S.timer.running){ S.timer.total = mins*60; S.timer.remaining = mins*60; }
+      render();
+    });
+    const breakMinInput = document.getElementById('breakMinInput');
+    if(breakMinInput) breakMinInput.addEventListener('change', (e) => {
+      const mins = Math.max(1, Math.min(180, parseInt(e.target.value,10) || 5));
+      S.timer.breakMinutes = mins;
+      if(S.timer.mode === 'break' && !S.timer.running){ S.timer.total = mins*60; S.timer.remaining = mins*60; }
+      render();
+    });
+    const loadMusicBtn = document.getElementById('loadMusicBtn');
+    if(loadMusicBtn) loadMusicBtn.addEventListener('click', () => {
+      const input = document.getElementById('musicUrlInput');
+      const titleInput = document.getElementById('musicTitleInput');
+      const url = input.value.trim();
+      const customTitle = titleInput.value.trim();
+      const info = toEmbedInfo(url);
+      if(!info){ S.musicErr = t().musicError; render(); return; }
+      S.musicErr = '';
+      const track = { id: uid(), url, embedUrl: info.embedUrl, label: customTitle || info.label, thumb: null };
+      S.settings.musicLinks = S.settings.musicLinks || [];
+      S.settings.musicLinks.push(track);
+      S.settings.nowPlayingId = track.id;
+      persistSettings();
+      render();
+      if(url.includes('open.spotify.com')){
+        fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if(!data) return;
+            if(data.thumbnail_url) track.thumb = data.thumbnail_url;
+            if(!customTitle && data.title) track.label = data.title;
+            persistSettings();
+            render();
+          })
+          .catch(() => {});
+      }
+    });
+    document.querySelectorAll('[data-playtrack]').forEach(el=>{
+      el.addEventListener('click', () => { S.settings.nowPlayingId = el.dataset.playtrack; persistSettings(); render(); });
+    });
+    document.querySelectorAll('[data-removetrack]').forEach(el=>{
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        S.settings.musicLinks = S.settings.musicLinks.filter(l=>l.id!==el.dataset.removetrack);
+        if(S.settings.nowPlayingId === el.dataset.removetrack){
+          S.settings.nowPlayingId = S.settings.musicLinks[0] ? S.settings.musicLinks[0].id : null;
+        }
+        persistSettings(); render();
+      });
+    });
+    const shuffleBtn = document.getElementById('shuffleTrackBtn');
+    if(shuffleBtn) shuffleBtn.addEventListener('click', () => {
+      const links = S.settings.musicLinks || [];
+      if(links.length < 2) return;
+      let pick;
+      do{ pick = links[Math.floor(Math.random()*links.length)]; } while(pick.id === S.settings.nowPlayingId);
+      S.settings.nowPlayingId = pick.id; persistSettings(); render();
+    });
+    const prevBtn = document.getElementById('prevTrackBtn');
+    if(prevBtn) prevBtn.addEventListener('click', () => {
+      const links = S.settings.musicLinks || [];
+      if(!links.length) return;
+      const idx = links.findIndex(l=>l.id===S.settings.nowPlayingId);
+      const next = links[(idx - 1 + links.length) % links.length];
+      S.settings.nowPlayingId = next.id; persistSettings(); render();
+    });
+    const nextBtn = document.getElementById('nextTrackBtn');
+    if(nextBtn) nextBtn.addEventListener('click', () => {
+      const links = S.settings.musicLinks || [];
+      if(!links.length) return;
+      const idx = links.findIndex(l=>l.id===S.settings.nowPlayingId);
+      const next = links[(idx + 1) % links.length];
+      S.settings.nowPlayingId = next.id; persistSettings(); render();
+    });
+  }
+
+  if(S.view==='diary'){
+    document.getElementById('diaryPrev').addEventListener('click', () => { S.cursor = addDays(S.cursor,-1); render(); });
+    document.getElementById('diaryNext').addEventListener('click', () => { S.cursor = addDays(S.cursor,1); render(); });
+    document.getElementById('diaryToday').addEventListener('click', () => { S.cursor = new Date(); render(); });
+    const diaryTextarea = document.getElementById('diaryTextarea');
+    if(diaryTextarea){
+      diaryTextarea.addEventListener('input', () => {
+        clearTimeout(_diarySaveTimer);
+        const status = document.getElementById('diaryStatus');
+        if(status) status.textContent = t().diarySaving;
+        _diarySaveTimer = setTimeout(() => {
+          const key = dkey(S.cursor);
+          S.diaryEntries[key] = diaryTextarea.value;
+          persistDiary();
+          const status2 = document.getElementById('diaryStatus');
+          if(status2){
+            const wc = diaryTextarea.value.trim() ? diaryTextarea.value.trim().split(/\s+/).length : 0;
+            status2.textContent = `${t().diarySaved} · ${wc} ${t().diaryWordCount}`;
+          }
+        }, 700);
+      });
+    }
+    document.querySelectorAll('[data-diaryjump]').forEach(el=>{
+      el.addEventListener('click', () => { S.cursor = parseDateLocal(el.dataset.diaryjump); render(); });
+    });
+  }
+
+  const todoForm = document.getElementById('todoForm');
+  if(todoForm){
+    todoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('todoInput');
+      const val = input.value.trim();
+      if(val){ const nt = blankTodo(); nt.text = val; delete nt._new; S.todos.push(nt); persistTodos(); render(); }
+    });
+    document.getElementById('btnTodoDetails').addEventListener('click', () => { S.editingTodo = blankTodo(); S.todoViewMode = false; render(); });
+    document.querySelectorAll('[data-toggle]').forEach(el=>{
+      el.addEventListener('click', () => {
+        const td = S.todos.find(x=>x.id===el.dataset.toggle);
+        if(td){ toggleTodoOn(td, new Date()); render(); }
+      });
+    });
+    document.querySelectorAll('[data-edittodo]').forEach(el=>{
+      el.addEventListener('click', () => {
+        const td = S.todos.find(x=>x.id===el.dataset.edittodo);
+        if(td){ S.editingTodo = JSON.parse(JSON.stringify(td)); S.todoViewMode = true; render(); }
+      });
+    });
+    document.querySelectorAll('[data-remove]').forEach(el=>{
+      el.addEventListener('click', () => { S.todos = S.todos.filter(x=>x.id!==el.dataset.remove); persistTodos(); render(); });
+    });
+  }
+
+  const eventOverlay = document.getElementById('eventOverlay');
+  if(eventOverlay){
+    eventOverlay.addEventListener('click', (e) => { if(e.target===eventOverlay) closeEventModal(); });
+    document.getElementById('closeEventModal').addEventListener('click', closeEventModal);
+    const cancelEventBtn = document.getElementById('cancelEvent');
+    if(cancelEventBtn) cancelEventBtn.addEventListener('click', closeEventModal);
+    const editEventBtn = document.getElementById('editEventBtn');
+    if(editEventBtn) editEventBtn.addEventListener('click', () => { S.eventViewMode = false; render(); });
+    document.querySelectorAll('#evSwatches .swatch').forEach(el=>{
+      el.addEventListener('click', () => { S.editingEvent.color = el.dataset.color; render(); });
+    });
+    wireCategorySelect('ev', 'event', S.editingEvent);
+    wireRepeatSelect('ev', S.editingEvent);
+    wirePrioritySelect('ev', S.editingEvent);
+    const saveEventBtn = document.getElementById('saveEvent');
+    if(saveEventBtn) saveEventBtn.addEventListener('click', () => {
+      const ev = S.editingEvent;
+      ev.title = document.getElementById('evTitle').value;
+      ev.date = document.getElementById('evDate').value || ev.date;
+      ev.start = document.getElementById('evStart').value;
+      ev.end = document.getElementById('evEnd').value;
+      ev.location = document.getElementById('evLocation').value;
+      const untilEl = document.getElementById('evUntil');
+      if(untilEl) ev.recurrence.until = untilEl.value || null;
+      delete ev._new;
+      const idx = S.events.findIndex(x=>x.id===ev.id);
+      if(idx>=0) S.events[idx] = ev; else S.events.push(ev);
+      persistEvents();
+      S.editingEvent = null;
+      render();
+    });
+    const delBtn = document.getElementById('deleteEvent');
+    if(delBtn) delBtn.addEventListener('click', () => {
+      S.events = S.events.filter(x=>x.id!==S.editingEvent.id);
+      persistEvents(); S.editingEvent = null; render();
+    });
+  }
+
+  const todoOverlay = document.getElementById('todoOverlay');
+  if(todoOverlay){
+    todoOverlay.addEventListener('click', (e) => { if(e.target===todoOverlay) closeTodoModal(); });
+    document.getElementById('closeTodoModal').addEventListener('click', closeTodoModal);
+    const cancelTodoBtn = document.getElementById('cancelTodo');
+    if(cancelTodoBtn) cancelTodoBtn.addEventListener('click', closeTodoModal);
+    const editTodoBtn = document.getElementById('editTodoBtn');
+    if(editTodoBtn) editTodoBtn.addEventListener('click', () => { S.todoViewMode = false; render(); });
+    wireCategorySelect('td', 'todo', S.editingTodo);
+    wireRepeatSelect('td', S.editingTodo);
+    wirePrioritySelect('td', S.editingTodo);
+    const saveTodoBtn = document.getElementById('saveTodo');
+    if(saveTodoBtn) saveTodoBtn.addEventListener('click', () => {
+      const td = S.editingTodo;
+      td.text = document.getElementById('tdText').value;
+      td.description = document.getElementById('tdDescription').value;
+      td.dueDate = document.getElementById('tdDueDate').value;
+      const durEl = document.getElementById('tdDuration');
+      if(durEl) td.durationMinutes = durEl.value ? parseInt(durEl.value,10) : null;
+      const untilEl = document.getElementById('tdUntil');
+      if(untilEl) td.recurrence.until = untilEl.value || null;
+      delete td._new;
+      const idx = S.todos.findIndex(x=>x.id===td.id);
+      if(idx>=0) S.todos[idx] = td; else S.todos.push(td);
+      persistTodos();
+      S.editingTodo = null;
+      render();
+    });
+    const delBtn = document.getElementById('deleteTodo');
+    if(delBtn) delBtn.addEventListener('click', () => {
+      S.todos = S.todos.filter(x=>x.id!==S.editingTodo.id);
+      persistTodos(); S.editingTodo = null; render();
+    });
+  }
+
+  const settingsOverlay = document.getElementById('settingsOverlay');
+  if(settingsOverlay){
+    settingsOverlay.addEventListener('click', (e) => { if(e.target===settingsOverlay){ S.showSettings=false; render(); } });
+    document.getElementById('closeSettingsModal').addEventListener('click', () => { S.showSettings=false; render(); });
+    document.getElementById('displayNameInput').addEventListener('change', (e) => { S.settings.displayName = e.target.value; persistSettings(); });
+    document.getElementById('clockSecondsToggle').addEventListener('change', (e) => { S.settings.clockSeconds = e.target.checked; persistSettings(); render(); });
+    document.querySelectorAll('[data-lang]').forEach(el=>{
+      el.addEventListener('click', () => { S.settings.language = el.dataset.lang; persistSettings(); render(); });
+    });
+    document.querySelectorAll('[data-theme]').forEach(el=>{
+      el.addEventListener('click', () => { S.settings.themeMode = el.dataset.theme; persistSettings(); render(); });
+    });
+    document.querySelectorAll('#settingsSwatches .swatch').forEach(el=>{
+      el.addEventListener('click', () => { S.settings.accent = el.dataset.accent; persistSettings(); render(); });
+    });
+    document.getElementById('customAccent').addEventListener('input', (e) => { S.settings.accent = e.target.value; persistSettings(); render(); });
+    document.querySelectorAll('#fontPicker [data-font]').forEach(el=>{
+      el.addEventListener('click', () => { S.settings.font = el.dataset.font; persistSettings(); render(); });
+    });
+    document.querySelectorAll('#soundPicker [data-sound]').forEach(el=>{
+      el.addEventListener('click', () => {
+        S.settings.timerSound = el.dataset.sound;
+        persistSettings();
+        playTimerSound(el.dataset.sound);
+        render();
+      });
+    });
+    const addQuoteBtn = document.getElementById('addQuoteBtn');
+    if(addQuoteBtn) addQuoteBtn.addEventListener('click', () => {
+      const input = document.getElementById('newQuoteInput');
+      const val = input.value.trim();
+      if(val){ S.settings.quotes = S.settings.quotes || []; S.settings.quotes.push(val); persistSettings(); render(); }
+    });
+    document.querySelectorAll('[data-delquote]').forEach(el=>{
+      el.addEventListener('click', () => {
+        S.settings.quotes.splice(Number(el.dataset.delquote),1); persistSettings(); render();
+      });
+    });
+    document.querySelectorAll('[data-editcat]').forEach(el=>{
+      el.addEventListener('input', (e) => {
+        const list = S.categories[el.dataset.cattype];
+        const c = list.find(x=>x.id===el.dataset.editcat);
+        if(c){ c.color = e.target.value; persistCategories(); render(); }
+      });
+    });
+    document.querySelectorAll('[data-delcat]').forEach(el=>{
+      el.addEventListener('click', () => {
+        S.categories[el.dataset.cattype] = S.categories[el.dataset.cattype].filter(c=>c.id!==el.dataset.delcat);
+        persistCategories(); render();
+      });
+    });
+    const notifBtn = document.getElementById('enableNotif');
+    if(notifBtn) notifBtn.addEventListener('click', () => {
+      if(typeof Notification === 'undefined'){ S.notifPermission = 'unsupported'; render(); return; }
+      Notification.requestPermission().then(p => { S.notifPermission = p; render(); });
+    });
+    const exportBtn = document.getElementById('exportBtn');
+    if(exportBtn) exportBtn.addEventListener('click', () => {
+      const box = document.getElementById('backupCodeBox');
+      box.select();
+      let copied = false;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(box.value).then(()=>{copied=true;}).catch(()=>{});
+      }
+      try{ document.execCommand('copy'); copied = true; }catch(e){}
+      S.exportCopiedFlash = true; render();
+      setTimeout(() => { S.exportCopiedFlash = false; render(); }, 2500);
+    });
+    document.getElementById('openGoogle').addEventListener('click', () => { S.showSettings=false; S.showGoogle=true; render(); });
+    document.getElementById('doSignOut').addEventListener('click', signOut);
+    const settingsRestoreBtn = document.getElementById('settingsRestoreBtn');
+    if(settingsRestoreBtn) settingsRestoreBtn.addEventListener('click', () => {
+      const code = document.getElementById('settingsRestoreInput').value;
+      if(!code.trim()){ S.restoreErr = t().restoreError; render(); return; }
+      S.showSettings = false;
+      importBackupCode(code);
+    });
+  }
+
+  const googleOverlay = document.getElementById('googleOverlay');
+  if(googleOverlay){
+    googleOverlay.addEventListener('click', (e) => { if(e.target===googleOverlay){ S.showGoogle=false; render(); } });
+    document.getElementById('closeGoogleModal').addEventListener('click', () => { S.showGoogle=false; render(); });
+    document.getElementById('closeGoogleModal2').addEventListener('click', () => { S.showGoogle=false; render(); });
+  }
+
+  const welcomeBackupOverlay = document.getElementById('welcomeBackupOverlay');
+  if(welcomeBackupOverlay){
+    const welcomeCopyBtn = document.getElementById('welcomeCopyBtn');
+    if(welcomeCopyBtn) welcomeCopyBtn.addEventListener('click', () => {
+      const box = document.getElementById('welcomeBackupCode');
+      box.select();
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(box.value).catch(()=>{}); }
+      try{ document.execCommand('copy'); }catch(e){}
+      welcomeCopyBtn.textContent = t().exportCopied;
+    });
+    const welcomeGotItBtn = document.getElementById('welcomeGotItBtn');
+    if(welcomeGotItBtn) welcomeGotItBtn.addEventListener('click', () => { S.showWelcomeBackup = false; render(); });
+  }
+
+  if(S.view==='week') applyWeekScroll();
+}
+
+function wireCategorySelect(prefix, type, target){
+  const sel = document.getElementById(`${prefix}Category`);
+  if(!sel) return;
+  sel.addEventListener('change', () => {
+    if(sel.value === '__new__'){
+      document.getElementById(`${prefix}NewCat`).style.display = 'block';
+    } else {
+      target.categoryId = sel.value || null;
+    }
+  });
+  const newCatBox = document.getElementById(`${prefix}NewCat`);
+  if(newCatBox){
+    let chosenColor = ACCENTS[0];
+    newCatBox.querySelectorAll('[data-newcatcolor]').forEach(sw => {
+      sw.addEventListener('click', () => { chosenColor = sw.dataset.newcatcolor; newCatBox.querySelectorAll('[data-newcatcolor]').forEach(s=>s.style.outline=''); sw.style.outline = '2px solid var(--card)'; });
+    });
+    const addBtn = document.getElementById(`${prefix}AddCatBtn`);
+    if(addBtn) addBtn.addEventListener('click', () => {
+      const name = document.getElementById(`${prefix}NewCatName`).value.trim();
+      if(!name) return;
+      const cat = { id: uid(), name, color: chosenColor };
+      S.categories[type] = S.categories[type] || [];
+      S.categories[type].push(cat);
+      persistCategories();
+      target.categoryId = cat.id;
+      render();
+    });
+  }
+}
+function wireRepeatSelect(prefix, target){
+  const sel = document.getElementById(`${prefix}Repeat`);
+  if(!sel) return;
+  sel.addEventListener('change', () => {
+    target.recurrence = target.recurrence || {type:'none', weekdays:[]};
+    target.recurrence.type = sel.value;
+    if((sel.value === 'weekly' || sel.value === 'monthly') && (!target.recurrence.weekdays || !target.recurrence.weekdays.length)){
+      const baseDate = target.date ? parseDateLocal(target.date) : (target.startDate ? parseDateLocal(target.startDate) : new Date());
+      target.recurrence.weekdays = [baseDate.getDay()];
+    }
+    render();
+  });
+  document.querySelectorAll(`#${prefix}Weekdays .wd-chip`).forEach(chip => {
+    chip.addEventListener('click', () => {
+      const wd = Number(chip.dataset.wd);
+      target.recurrence.weekdays = target.recurrence.weekdays || [];
+      const i = target.recurrence.weekdays.indexOf(wd);
+      if(i>=0) target.recurrence.weekdays.splice(i,1); else target.recurrence.weekdays.push(wd);
+      render();
+    });
+  });
+}
+
+function closeEventModal(){ S.editingEvent = null; render(); }
+function closeTodoModal(){ S.editingTodo = null; render(); }
+
+function applyWeekScroll(){
+  const el = document.getElementById('weekScroll');
+  if(!el) return;
+  const HOUR_H = 52;
+  const start = startOfWeek(S.cursor);
+  const containsToday = sameDay(start, startOfWeek(new Date()));
+  if(S.forceScrollToNow){
+    if(containsToday){
+      const now = new Date();
+      el.scrollTop = Math.max((now.getHours()*60+now.getMinutes())/60*HOUR_H - 120, 0);
+    } else {
+      el.scrollTop = 7*HOUR_H;
+    }
+    S.forceScrollToNow = false;
+  } else if(S.savedScrollTop != null){
+    el.scrollTop = S.savedScrollTop;
+  } else {
+    el.scrollTop = 7*HOUR_H;
+  }
+}
+
+/* ================= boot ================= */
+window.addEventListener('error', (e) => {
+  const b = document.getElementById('debugBanner');
+  b.style.display = 'block';
+  b.textContent = 'Script error: ' + (e.message || 'unknown error') + ' — please screenshot this and tell Claude.';
+});
+
+S.ready = true;
+render();
+hydrateAll();
+</script>
+</body>
+</html>
